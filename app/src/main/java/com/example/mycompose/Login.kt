@@ -41,6 +41,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mycompose.navigation.Screens
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 @Composable
@@ -49,7 +50,6 @@ fun Login(navController: NavController) {
     val password = remember { mutableStateOf("") }
     val passwordVisible = remember { mutableStateOf(false) }
     val context = LocalContext.current
-
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -68,32 +68,31 @@ fun Login(navController: NavController) {
         Spacer(modifier = Modifier.padding(20.dp))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             OutlinedTextField(
-                value =email.value ,
-                onValueChange ={email.value=it},
-                label = { Text(text = "Email Adress")},
-                placeholder = { Text(text = "Email Adress")},
-                singleLine=true,
+                value = email.value,
+                onValueChange = { email.value = it },
+                label = { Text(text = "Email Address") },
+                placeholder = { Text(text = "Email Address") },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(0.8f)
             )
-            OutlinedTextField(value = password.value,
-                onValueChange ={password.value=it},
+            OutlinedTextField(
+                value = password.value,
+                onValueChange = { password.value = it },
                 trailingIcon = {
-                    IconButton(onClick = {passwordVisible.value=!passwordVisible.value })
-                    {
+                    IconButton(onClick = { passwordVisible.value = !passwordVisible.value }) {
                         Icon(
                             imageVector = if (passwordVisible.value) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                             contentDescription = "Password visibility",
-                            tint=if (passwordVisible.value) colorResource(id = R.color.purple_700) else Color.Gray
+                            tint = if (passwordVisible.value) colorResource(id = R.color.purple_700) else Color.Gray
                         )
                     }
                 },
-                label = { Text(text = "Password")},
-                placeholder = { Text(text = "Password")},
+                label = { Text(text = "Password") },
+                placeholder = { Text(text = "Password") },
                 singleLine = true,
                 visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(0.8f)
             )
-
         }
 
         Spacer(modifier = Modifier.padding(10.dp))
@@ -101,42 +100,55 @@ fun Login(navController: NavController) {
             onClick = {
                 FirebaseAuth.getInstance()
                     .signInWithEmailAndPassword(email.value, password.value)
-                    .addOnSuccessListener() {
-                        navController.navigate(Screens.Profile.name)
+                    .addOnSuccessListener {
+                        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@addOnSuccessListener
+                        FirebaseFirestore.getInstance().collection("users")
+                            .document(userId)
+                            .get()
+                            .addOnSuccessListener { document ->
+                                val firstName = document.getString("first_name").orEmpty()
+                                val lastName = document.getString("last_name").orEmpty()
+                                val picUrl = document.getString("profile_picture").orEmpty()
+
+                                if (firstName.isNotEmpty() && lastName.isNotEmpty() && picUrl.isNotEmpty()) {
+                                    // Navigate to Home screen if profile data is complete
+                                    navController.navigate(Screens.Home.name) {
+                                        popUpTo(Screens.Login.name) { inclusive = true }
+                                    }
+                                } else {
+                                    // Navigate to Profile screen if profile data is incomplete
+                                    navController.navigate(Screens.Profile.name) {
+                                        popUpTo(Screens.Login.name) { inclusive = true }
+                                    }
+                                }
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(context, "Error retrieving profile information.", Toast.LENGTH_SHORT).show()
+                            }
                     }
                     .addOnFailureListener {
-                        Toast.makeText(
-                            context,
-                            it.message,
-                            Toast.LENGTH_SHORT,
-                        ).show()
-                    } },
+                        Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+                    }
+            },
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .height(50.dp),
         ) {
-            Text(
-                text = "Login"
-            )
-
+            Text(text = "Login")
         }
         Row {
+            Text(text = "Don't have an account?")
             Text(
-                text = "Dont have an account?",
-
+                text = " Register",
+                modifier = Modifier.clickable(onClick = { navController.navigate(Screens.Register.name) }),
+                color = MaterialTheme.colorScheme.primary
             )
-            Text(text = " Register",
-                modifier = Modifier.clickable(onClick = {navController.navigate(Screens.Register.name)}),
-                color = MaterialTheme.colorScheme.primary)
         }
     }
-
-
-
 }
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewLogin(navController: NavController= rememberNavController()) {
+fun PreviewLogin(navController: NavController = rememberNavController()) {
     Login(navController = navController)
 }

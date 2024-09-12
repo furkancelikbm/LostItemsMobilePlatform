@@ -1,6 +1,7 @@
 package com.example.mycompose.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -11,8 +12,13 @@ import com.example.mycompose.Profile
 import com.example.mycompose.Register
 
 @Composable
-fun Navigation(navController: NavHostController,startingScreen: String){
-    NavHost(navController = navController, startDestination = startingScreen) {
+fun Navigation(navController: NavHostController,startingScreen: String,modifier: Modifier){
+    NavHost(
+        navController = navController,
+        startDestination = startingScreen,
+        modifier=Modifier
+    ) {
+
         composable(Screens.Profile.name) {
             Profile(navController = navController)
         }
