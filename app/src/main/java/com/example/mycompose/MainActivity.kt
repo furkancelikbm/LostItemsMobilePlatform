@@ -42,9 +42,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background) {
                     ProfileApp()
                     println("main calisti")
-                }
-                fun oylesine(){}
-            }
+                } }
         }
     }
 }
@@ -54,79 +52,6 @@ class MainActivity : ComponentActivity() {
 fun GreetingPreview() {
     MycomposeTheme {
         // Preview content here
-    }
-}
-@Composable
-fun ProfileApp() {
-    val navController = rememberNavController()
-    val navigationViewModel: NavigationViewModel = viewModel()
-    val context = LocalContext.current
-
-    val firebaseUser = FirebaseAuth.getInstance().currentUser
-    var startingScreen by remember { mutableStateOf(Screens.Login.name) }
-    var showBottomBar by remember { mutableStateOf(false) } // State to toggle BottomNavigationBar
-    var isLoading by remember { mutableStateOf(true) } // State for loading indicator
-
-    // Load user profile data to determine starting screen
-    LaunchedEffect(firebaseUser) {
-        if (firebaseUser != null) {
-            val userId = firebaseUser.uid
-            FirebaseFirestore.getInstance().collection("users")
-                .document(userId)
-                .get()
-                .addOnSuccessListener { document ->
-                    val firstName = document.getString("first_name").orEmpty()
-                    val lastName = document.getString("last_name").orEmpty()
-                    val picUrl = document.getString("profile_picture").orEmpty()
-
-                    startingScreen = when {
-                        firstName.isNotEmpty() && lastName.isNotEmpty() && picUrl.isNotEmpty() -> {
-                            showBottomBar = true // Show BottomNavigationBar if profile is complete
-                            Screens.Home.name
-                        }
-                        else -> {
-                            showBottomBar = false
-                            Screens.CompleteProfileScreen.name
-                        }
-                    }
-                    isLoading = false // Stop showing progress indicator when data is loaded
-                }
-                .addOnFailureListener {
-                    Toast.makeText(context, "Error retrieving profile information.", Toast.LENGTH_SHORT).show()
-                    startingScreen = Screens.Login.name
-                    showBottomBar = false
-                    isLoading = false // Stop loading if an error occurs
-                }
-        } else {
-            startingScreen = Screens.Login.name
-            showBottomBar = false
-            isLoading = false // Stop loading if no user is logged in
-        }
-    }
-
-    if (isLoading) {
-        // Show CircularProgressIndicator while loading
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-    } else {
-        // Show content when loading is complete
-        Scaffold(
-            bottomBar = {
-                if (showBottomBar) { // Show BottomNavigationBar only when user is on Home screen
-                    BottomNavigationBar(navController = navController, viewModel = navigationViewModel)
-                }
-            }
-        ) { padding ->
-            Navigation(
-                navController = navController,
-                startingScreen = startingScreen,
-                modifier = Modifier.padding(padding)
-            )
-        }
     }
 }
 
