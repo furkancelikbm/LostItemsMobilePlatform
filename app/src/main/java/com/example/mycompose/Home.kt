@@ -22,6 +22,7 @@ import coil.compose.rememberImagePainter
 
 @Composable
 fun Home(navController: NavController) {
+
     // Sample data
     val photoItems = listOf(
         PhotoItem("https://fastly.picsum.photos/id/1082/200/300.jpg?hmac=AaFCHuEst4e0Oy553UCibOtysEKByBAl3XsTR8n4e1c", "Photo 1"),

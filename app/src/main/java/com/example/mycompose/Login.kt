@@ -117,7 +117,7 @@ fun Login(navController: NavController) {
                                     }
                                 } else {
                                     // Navigate to Profile screen if profile data is incomplete
-                                    navController.navigate(Screens.Profile.name) {
+                                    navController.navigate(Screens.CompleteProfileScreen.name) {
                                         popUpTo(Screens.Login.name) { inclusive = true }
                                     }
                                 }

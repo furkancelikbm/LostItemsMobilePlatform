@@ -5,8 +5,10 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -16,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,7 +41,9 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background) {
                     ProfileApp()
+                    println("main calisti")
                 }
+                fun oylesine(){}
             }
         }
     }
@@ -51,7 +56,6 @@ fun GreetingPreview() {
         // Preview content here
     }
 }
-
 @Composable
 fun ProfileApp() {
     val navController = rememberNavController()
@@ -60,6 +64,8 @@ fun ProfileApp() {
 
     val firebaseUser = FirebaseAuth.getInstance().currentUser
     var startingScreen by remember { mutableStateOf(Screens.Login.name) }
+    var showBottomBar by remember { mutableStateOf(false) } // State to toggle BottomNavigationBar
+    var isLoading by remember { mutableStateOf(true) } // State for loading indicator
 
     // Load user profile data to determine starting screen
     LaunchedEffect(firebaseUser) {
@@ -74,28 +80,53 @@ fun ProfileApp() {
                     val picUrl = document.getString("profile_picture").orEmpty()
 
                     startingScreen = when {
-                        firstName.isNotEmpty() && lastName.isNotEmpty() && picUrl.isNotEmpty() -> Screens.Home.name
-                        else -> Screens.Profile.name
+                        firstName.isNotEmpty() && lastName.isNotEmpty() && picUrl.isNotEmpty() -> {
+                            showBottomBar = true // Show BottomNavigationBar if profile is complete
+                            Screens.Home.name
+                        }
+                        else -> {
+                            showBottomBar = false
+                            Screens.CompleteProfileScreen.name
+                        }
                     }
+                    isLoading = false // Stop showing progress indicator when data is loaded
                 }
                 .addOnFailureListener {
                     Toast.makeText(context, "Error retrieving profile information.", Toast.LENGTH_SHORT).show()
                     startingScreen = Screens.Login.name
+                    showBottomBar = false
+                    isLoading = false // Stop loading if an error occurs
                 }
         } else {
             startingScreen = Screens.Login.name
+            showBottomBar = false
+            isLoading = false // Stop loading if no user is logged in
         }
     }
 
-    Scaffold(
-        bottomBar = {
-            BottomNavigationBar(navController = navController, viewModel = navigationViewModel)
+    if (isLoading) {
+        // Show CircularProgressIndicator while loading
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
-    ) { padding ->
-        Navigation(
-            navController = navController,
-            startingScreen = startingScreen,
-            modifier = Modifier.padding(padding)
-        )
+    } else {
+        // Show content when loading is complete
+        Scaffold(
+            bottomBar = {
+                if (showBottomBar) { // Show BottomNavigationBar only when user is on Home screen
+                    BottomNavigationBar(navController = navController, viewModel = navigationViewModel)
+                }
+            }
+        ) { padding ->
+            Navigation(
+                navController = navController,
+                startingScreen = startingScreen,
+                modifier = Modifier.padding(padding)
+            )
+        }
     }
 }
+

@@ -6,6 +6,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.mycompose.CompleteProfileScreen
 import com.example.mycompose.Home
 import com.example.mycompose.Login
 import com.example.mycompose.Profile
@@ -32,6 +33,10 @@ fun Navigation(navController: NavHostController,startingScreen: String,modifier:
         }
         composable(Screens.Home.name){
             Home(navController=navController)
+        }
+
+        composable(Screens.CompleteProfileScreen.name){
+            CompleteProfileScreen(navController=navController)
         }
 
 
