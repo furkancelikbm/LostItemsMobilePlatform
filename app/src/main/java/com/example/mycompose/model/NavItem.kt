@@ -1,4 +1,4 @@
-package com.example.mycompose.NavigationBar
+package com.example.mycompose.model
 
 import androidx.compose.ui.graphics.vector.ImageVector
 

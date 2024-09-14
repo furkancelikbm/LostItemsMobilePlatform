@@ -1,4 +1,4 @@
-package com.example.mycompose.NavigationBar
+package com.example.mycompose.view.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -12,9 +12,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.mycompose.model.NavItem
+import com.example.mycompose.navigation.NavigationViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

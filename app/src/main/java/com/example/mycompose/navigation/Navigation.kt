@@ -5,11 +5,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.mycompose.Home
-import com.example.mycompose.Login
-import com.example.mycompose.Profile
+import com.example.mycompose.view.screens.Home
+import com.example.mycompose.view.screens.Login
+import com.example.mycompose.view.screens.Profile
 import com.example.mycompose.ProfileApp
-import com.example.mycompose.Register
+import com.example.mycompose.view.screens.Register
 import com.example.mycompose.ui.CompleteProfileScreen
 
 @Composable

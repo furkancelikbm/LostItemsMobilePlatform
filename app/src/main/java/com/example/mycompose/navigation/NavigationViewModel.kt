@@ -1,4 +1,4 @@
-package com.example.mycompose.NavigationBar
+package com.example.mycompose.navigation
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf

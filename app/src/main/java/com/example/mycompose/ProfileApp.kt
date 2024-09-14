@@ -17,9 +17,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.mycompose.NavigationBar.NavigationViewModel
+import com.example.mycompose.navigation.NavigationViewModel
 import com.example.mycompose.navigation.Navigation
 import com.example.mycompose.navigation.Screens
+import com.example.mycompose.view.components.AppScaffold
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -96,8 +97,3 @@ fun ProfileApp(navController: NavController) {
         )
     }
 }
-
-
-
-
-

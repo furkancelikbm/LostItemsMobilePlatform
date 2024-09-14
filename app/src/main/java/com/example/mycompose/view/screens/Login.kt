@@ -1,6 +1,5 @@
-package com.example.mycompose
+package com.example.mycompose.view.screens
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +40,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mycompose.navigation.Screens
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.ui.platform.LocalContext
+import com.example.mycompose.R
 import com.google.firebase.firestore.FirebaseFirestore
 
 

@@ -1,4 +1,4 @@
-package com.example.mycompose
+package com.example.mycompose.view.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
+import com.example.mycompose.model.PhotoItem
 
 @Composable
 fun Home(navController: NavController) {

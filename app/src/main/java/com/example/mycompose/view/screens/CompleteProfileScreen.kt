@@ -16,7 +16,7 @@ import androidx.navigation.NavController
 import com.example.mycompose.viewmodel.ProfileViewModel
 import com.example.mycompose.repository.ProfileRepository
 import com.example.mycompose.viewmodel.ProfileViewModelFactory
-import com.example.mycompose.widgets.ProfileImage
+import com.example.mycompose.view.components.ProfileImage
 
 @Composable
 fun CompleteProfileScreen(navController: NavController) {
