@@ -5,5 +5,6 @@ enum class Screens {
     Register,
     Profile,
     Home,
-    CompleteProfileScreen
+    CompleteProfileScreen,
+    ProfileApp
 }

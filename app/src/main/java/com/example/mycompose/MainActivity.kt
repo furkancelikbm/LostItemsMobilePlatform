@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
             MycomposeTheme {
                 Surface(modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background) {
-                    ProfileApp()
+                    ProfileApp(rememberNavController())
                     println("main calisti")
                 } }
         }

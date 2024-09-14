@@ -1,9 +1,12 @@
 package com.example.mycompose
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -13,7 +16,8 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 
 class ProfileViewModel : ViewModel() {
-
+    var loading by mutableStateOf(false)
+        private set
     val firstName = mutableStateOf("")
     val lastName = mutableStateOf("")
     val editFirstName = mutableStateOf("")
@@ -54,7 +58,9 @@ class ProfileViewModel : ViewModel() {
             }
     }
 
+    @SuppressLint("SuspiciousIndentation")
     fun saveProfileData(context: Context, navController: NavController, homeScreen: String) {
+        loading = true //progress bar circle için yazdım
             if (newPicUri.value != null) {
                 updateProfilePicture(newPicUri.value!!) { updatedPicUrl ->
                     picUrl.value = updatedPicUrl
@@ -76,14 +82,18 @@ class ProfileViewModel : ViewModel() {
             )
             .addOnSuccessListener {
                 Toast.makeText(context, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
-                navController.navigate(homeScreen) {
-                    popUpTo("Profile") { inclusive = true }
+                loading = false // Stop showing progress bar
+                navController.navigate("ProfileApp") {
+                    popUpTo("Profile") { inclusive = true } // Update this as needed
+                    // Ensure Home screen is not recreated if already at the top
+                    launchSingleTop = true
                 }
             }
             .addOnFailureListener {
                 Toast.makeText(context, "Failed to update profile.", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     private fun updateProfilePicture(uri: Uri, onSuccess: (String) -> Unit) {
         val storageRef = FirebaseStorage.getInstance().getReference("profile_pictures/$userId")

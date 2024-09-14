@@ -23,19 +23,9 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun Profile(navController: NavController, viewModel: ProfileViewModel = viewModel()) {
     val context = LocalContext.current
+    // Display progress bar if profile is loading
+    TransparentCircularProgressBar(isLoading = viewModel.loading)
 
-    LaunchedEffect(Unit) {
-        viewModel.loadUserProfile(context, navController, "Home")
-    }
-
-    if (!viewModel.profileLoaded.value) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-    } else {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,7 +96,7 @@ fun Profile(navController: NavController, viewModel: ProfileViewModel = viewMode
             }
         }
     }
-}
+
 
 @Preview(showBackground = true)
 @Composable

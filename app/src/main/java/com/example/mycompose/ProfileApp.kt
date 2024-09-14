@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mycompose.NavigationBar.NavigationViewModel
 import com.example.mycompose.navigation.Navigation
@@ -23,7 +24,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun ProfileApp() {
+fun ProfileApp(navController: NavController) {
     val navController = rememberNavController()
     val navigationViewModel: NavigationViewModel = viewModel()
     val context = LocalContext.current

@@ -48,21 +48,17 @@ import com.google.firebase.firestore.FirebaseFirestore
 @Composable
 fun CompleteProfileScreen(navController: NavController, viewModel: ProfileViewModel = viewModel()) {
     val context = LocalContext.current
-    val activity = context as? MainActivity
 
+    // Call this to load user profile data
     LaunchedEffect(Unit) {
         viewModel.loadUserProfile(context, navController, "Home")
     }
 
+    // Display progress bar if profile is loading
+    TransparentCircularProgressBar(isLoading = viewModel.loading)
 
-    if (!viewModel.profileLoaded.value) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-    } else {
+    // Display the profile form if profile is loaded
+    if (viewModel.profileLoaded.value) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,19 +94,14 @@ fun CompleteProfileScreen(navController: NavController, viewModel: ProfileViewMo
             }
 
             Button(
-                onClick = @androidx.compose.ui.tooling.preview.Preview {
+                onClick = {
                     // Check if all required fields are filled
                     val isFormValid = viewModel.editFirstName.value.isNotBlank() &&
                             viewModel.editLastName.value.isNotBlank() &&
                             viewModel.newPicUri.value != null
 
                     if (isFormValid) {
-                        // Save profile data and navigate to home screen
-                        viewModel.saveProfileData(context, navController, "Home")
-                        navController.navigate(Screens.Home.name) {
-                            // Clear back stack to avoid navigating back to the CompleteProfileScreen
-                            popUpTo(Screens.CompleteProfileScreen.name) { inclusive = true }
-                        }
+                        viewModel.saveProfileData(context, navController, "ProfileApp")
                     } else {
                         // Update error message if form is invalid
                         viewModel.errorMessage.value = "Please fill in all fields and select a profile picture."

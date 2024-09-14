@@ -10,6 +10,7 @@ import com.example.mycompose.CompleteProfileScreen
 import com.example.mycompose.Home
 import com.example.mycompose.Login
 import com.example.mycompose.Profile
+import com.example.mycompose.ProfileApp
 import com.example.mycompose.Register
 
 @Composable
@@ -37,6 +38,10 @@ fun Navigation(navController: NavHostController,startingScreen: String,modifier:
 
         composable(Screens.CompleteProfileScreen.name){
             CompleteProfileScreen(navController=navController)
+        }
+
+        composable(Screens.ProfileApp.name){
+            ProfileApp(navController=navController)
         }
 
 
