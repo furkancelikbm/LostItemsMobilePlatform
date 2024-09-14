@@ -81,7 +81,6 @@ dependencies {
     implementation(libs.google.firebase.firestore.ktx)
 
 
-
     //coil
     implementation (libs.coil.compose)
 
