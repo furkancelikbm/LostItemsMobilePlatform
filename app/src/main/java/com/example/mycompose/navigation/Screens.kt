@@ -6,5 +6,7 @@ enum class Screens {
     Profile,
     Home,
     CompleteProfileScreen,
-    ProfileApp
+    ProfileApp,
+    CreateAdScreen,
+    MapScreen
 }

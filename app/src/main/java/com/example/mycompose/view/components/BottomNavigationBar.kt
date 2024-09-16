@@ -1,8 +1,10 @@
 package com.example.mycompose.view.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -12,8 +14,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.mycompose.model.NavItem
 import com.example.mycompose.navigation.NavigationViewModel
 
@@ -22,10 +26,11 @@ import com.example.mycompose.navigation.NavigationViewModel
 fun BottomNavigationBar(navController: NavController, viewModel: NavigationViewModel) {
     val items = listOf(
         NavItem("Home", Icons.Filled.Home, Icons.Outlined.Home),
+        NavItem("CreateAdScreen", Icons.Filled.Add, Icons.Outlined.Add),
         NavItem("Profile", Icons.Filled.Person, Icons.Outlined.Person)
     )
 
-    // Geçerli sayfa yolunu al
+    // Get the current route
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: ""
 
@@ -43,7 +48,7 @@ fun BottomNavigationBar(navController: NavController, viewModel: NavigationViewM
                 onClick = {
                     viewModel.onNavigationItemSelected(index)
                     navController.navigate(item.title) {
-                        // Aynı hedefe birden fazla giriş yapılmasını önlemek için back stack temizleme
+                        // Prevent multiple copies of the same destination
                         popUpTo(navController.graph.startDestinationId) {
                             saveState = true
                         }
@@ -56,4 +61,12 @@ fun BottomNavigationBar(navController: NavController, viewModel: NavigationViewM
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun BottomNavigationBarPreview() {
+    // Create a mock NavController and ViewModel for the preview
+    val navController = rememberNavController()
+    val viewModel = NavigationViewModel() // Ensure this ViewModel has a default constructor for preview
 
+    BottomNavigationBar(navController, viewModel)
+}

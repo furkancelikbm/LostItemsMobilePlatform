@@ -37,6 +37,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+
     }
     buildFeatures {
         compose = true
@@ -63,6 +64,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.webkit)
     implementation(libs.com.google.firebase)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -79,6 +81,26 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.google.firebase.firestore.ktx)
+
+    /*--------------------------------*/
+
+
+    implementation (libs.play.services.maps)
+    implementation (libs.play.services.location)
+
+    implementation (libs.places) //yerleri göstermesi için
+
+    // Diğer bağımlılıklarınız burada
+    implementation (libs.maps.compose)
+    implementation (libs.play.services.maps.v1802)
+
+
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+
+    implementation (libs.androidx.runtime.livedata) // Adjust version as needed
+
+
 
 
     //coil

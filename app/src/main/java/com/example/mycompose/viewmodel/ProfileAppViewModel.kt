@@ -14,7 +14,7 @@ class ProfileAppViewModel : ViewModel() {
     var showBottomBar by mutableStateOf(false)
     var isLoading by mutableStateOf(true)
 
-    fun loadUserProfile(context: android.content.Context) {
+    fun loadUserProfile(context: android.content.Context) { //amacı : hesap olusmamıssa logine yonlendir olustuysa hom'a gonder
         val firebaseUser = FirebaseAuth.getInstance().currentUser
         if (firebaseUser != null) {
             val userId = firebaseUser.uid
