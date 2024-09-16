@@ -15,8 +15,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 @Composable
-fun MapScreen(navController: NavHostController, onLocationSelected: (String) -> Unit) {
-    val sydney = LatLng(-34.0, 151.0) // Initial location
+fun MapScreen(
+    navController: NavHostController,
+    onLocationSelected: (LocationItem) -> Unit // Change callback to LocationItem
+) {
+    val sydney = LatLng(-34.0, 151.0) // Initial position
     val cameraPositionState = rememberCameraPositionState {
         position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(sydney, 10f)
     }
@@ -48,27 +51,18 @@ fun MapScreen(navController: NavHostController, onLocationSelected: (String) -> 
                     response: retrofit2.Response<GeocodingResponse>
                 ) {
                     if (response.isSuccessful) {
-                        val address = response.body()?.results?.firstOrNull()?.formatted_address
-                        addressState.value = address ?: "Address not found"
-                        onLocationSelected(addressState.value)
+                        val address = response.body()?.results?.get(0)?.formatted_address ?: "No address found"
+                        addressState.value = address
+                        onLocationSelected(LocationItem(latLng.latitude, latLng.longitude, address)) // Update callback
                     } else {
-                        addressState.value = "Failed to get address"
-                        onLocationSelected(addressState.value)
+                        Log.e("MapScreen", "Geocoding request failed with code: ${response.code()}")
                     }
-
-                    // Save the location and navigate back
-                    navController.previousBackStackEntry?.savedStateHandle?.set("location", addressState.value)
                 }
 
                 override fun onFailure(call: Call<GeocodingResponse>, t: Throwable) {
-                    addressState.value = "Failed to get address"
-                    onLocationSelected(addressState.value)
+                    Log.e("MapScreen", "Geocoding request failed: ${t.message}")
                 }
             })
-
-            // Save the location and navigate back
-            navController.previousBackStackEntry?.savedStateHandle?.set("location", addressState.value)
-            navController.popBackStack()
         }
     ) {
         Marker(
@@ -77,4 +71,3 @@ fun MapScreen(navController: NavHostController, onLocationSelected: (String) -> 
         )
     }
 }
-

@@ -1,4 +1,9 @@
-package com.example.mycompose.model
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
-class LocationItem {
-}
+@Parcelize
+data class LocationItem(
+    val latitude: Double,
+    val longitude: Double,
+    val address: String
+) : Parcelable

@@ -1,5 +1,3 @@
-package com.example.mycompose.view.screens
-
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,47 +21,50 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.rememberImagePainter
+import coil.compose.rememberAsyncImagePainter
 import com.example.mycompose.model.AdModel
 import com.example.mycompose.model.UserProfile
 import com.example.mycompose.repository.AdRepository
 import com.example.mycompose.repository.ProfileRepository
 import kotlinx.coroutines.launch
 import java.util.UUID
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun CreateAdScreen(navController: NavHostController) {
-    var adModel by remember { mutableStateOf(AdModel("", "", "", "", listOf(), "")) }
+    var adModel by remember { mutableStateOf(AdModel("", "", "", LocationItem(0.0, 0.0, ""), listOf(), "")) }
     var userProfile by remember { mutableStateOf(UserProfile()) }
     var selectedImages by remember { mutableStateOf<List<Pair<Uri, String>>>(listOf()) }
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) } // State for loading indicator
 
     val profileRepository = remember { ProfileRepository() }
     val adRepository = remember { AdRepository() }
     val coroutineScope = rememberCoroutineScope()
+
+    // Retrieve the current user's userId from FirebaseAuth
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+
+    val location = navController.currentBackStackEntry?.savedStateHandle?.get<LocationItem>("location")
+    location?.let {
+        adModel = adModel.copy(location = it)
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let {
             if (selectedImages.size < 5) {
-                val uniqueId = UUID.randomUUID().toString() // Generate a unique ID
+                val uniqueId = UUID.randomUUID().toString()
                 selectedImages = selectedImages + Pair(it, uniqueId)
             }
         }
     }
 
-    // Fetch user profile
     LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            userProfile = profileRepository.getUserProfile()
-        }
+        userProfile = profileRepository.getUserProfile()
     }
-
-    // Observe location state
-    val location = navController.currentBackStackEntry?.savedStateHandle?.get<String>("location")
-    location?.let { adModel = adModel.copy(location = it) }
 
     Column(
         modifier = Modifier
@@ -88,16 +89,16 @@ fun CreateAdScreen(navController: NavHostController) {
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Location TextField with Icon
         OutlinedTextField(
-            value = adModel.location,
-            onValueChange = { adModel = adModel.copy(location = it) },
+            value = adModel.location.address,
+            onValueChange = { name ->
+                adModel = adModel.copy(location = adModel.location.copy(address = name))
+            },
             label = { Text("Location") },
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 IconButton(onClick = {
                     navController.navigate("MapScreen") {
-                        // Use the result callback to get the selected location
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -126,7 +127,7 @@ fun CreateAdScreen(navController: NavHostController) {
                         .padding(4.dp)
                         .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
                 ) {
-                    val painter = rememberImagePainter(uri)
+                    val painter = rememberAsyncImagePainter(uri)
                     Image(painter = painter, contentDescription = null, modifier = Modifier.fillMaxSize())
 
                     val uniqueId = selectedImages.find { it.first == uri }?.second
@@ -159,9 +160,13 @@ fun CreateAdScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(8.dp))
         }
 
+        if (isLoading) { // Show loading indicator
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         AdButton(
             onClick = {
-                // Form validation
                 when {
                     adModel.title.isBlank() -> {
                         errorMessage = "Title cannot be empty."
@@ -171,7 +176,7 @@ fun CreateAdScreen(navController: NavHostController) {
                         errorMessage = "Description cannot be empty."
                         showError = true
                     }
-                    adModel.location.isBlank() -> {
+                    adModel.location.address.isBlank() -> {
                         errorMessage = "Location cannot be empty."
                         showError = true
                     }
@@ -180,23 +185,25 @@ fun CreateAdScreen(navController: NavHostController) {
                         showError = true
                     }
                     else -> {
-                        showError = false
+                        isLoading = true // Start loading
                         coroutineScope.launch {
                             try {
+                                // Upload images and get their URLs
                                 val imageUrls = selectedImages.map { (uri, _) ->
                                     adRepository.uploadImage(uri)
                                 }
 
-                                val newAd = adModel.copy(
-                                    id = UUID.randomUUID().toString(),
-                                    userId = userProfile.userId,
-                                    imageUrls = imageUrls
-                                )
+                                // Add image URLs to ad model
+                                adModel = adModel.copy(imageUrls = imageUrls)
 
-                                adRepository.addAd(newAd)
-                                navController.popBackStack()
+                                // Add ad to Firestore with userId
+                                userId?.let { adRepository.addAd(adModel, it) }
+                                navController.navigate("Home")
                             } catch (e: Exception) {
-                                Log.e("CreateAdScreen", "Error adding ad: ", e)
+                                errorMessage = "Failed to create ad."
+                                showError = true
+                            } finally {
+                                isLoading = false // Stop loading
                             }
                         }
                     }
@@ -206,6 +213,8 @@ fun CreateAdScreen(navController: NavHostController) {
         )
     }
 }
+
+
 
 @Composable
 fun AdTextField(value: String, onValueChange: (String) -> Unit, label: String) {
@@ -217,15 +226,15 @@ fun AdTextField(value: String, onValueChange: (String) -> Unit, label: String) {
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-fun CreateAdScreenPreview() {
-    CreateAdScreen(navController = rememberNavController())
-}
-
 @Composable
 fun AdButton(onClick: () -> Unit, text: String) {
     Button(onClick = onClick) {
         Text(text = text)
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CreateAdScreenPreview() {
+    CreateAdScreen(navController = rememberNavController())
 }

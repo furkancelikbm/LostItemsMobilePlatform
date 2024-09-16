@@ -1,5 +1,6 @@
 package com.example.mycompose.navigation
 
+import CreateAdScreen
 import MapScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -12,7 +13,6 @@ import com.example.mycompose.view.screens.Profile
 import com.example.mycompose.view.screens.ProfileApp
 import com.example.mycompose.view.screens.Register
 import com.example.mycompose.ui.CompleteProfileScreen
-import com.example.mycompose.view.screens.CreateAdScreen
 
 @Composable
 fun Navigation(

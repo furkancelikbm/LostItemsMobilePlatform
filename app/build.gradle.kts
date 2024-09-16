@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.googleServices)
+    id("kotlin-parcelize")
+
 
 }
 
@@ -99,6 +101,9 @@ dependencies {
     implementation (libs.converter.gson)
 
     implementation (libs.androidx.runtime.livedata) // Adjust version as needed
+
+    implementation (libs.androidx.lifecycle.viewmodel.savedstate) // Check for the latest version
+
 
 
 
