@@ -1,5 +1,6 @@
 package com.example.mycompose.view.screens
 
+import LocationInputField
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -28,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
-import com.example.mycompose.LocationInputField
 import com.example.mycompose.RideViewModel
 import com.example.mycompose.model.AdModel
 import com.example.mycompose.model.UserProfile
@@ -40,7 +40,7 @@ import java.util.UUID
 
 @Composable
 fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
-    var adModel by remember { mutableStateOf(AdModel("", "", "", "", listOf(), "")) }
+    var adModel by remember { mutableStateOf(AdModel("", "", "", "", listOf(), "","")) }
     var userProfile by remember { mutableStateOf(UserProfile()) }
     var selectedImages by remember { mutableStateOf<List<Pair<Uri, String>>>(listOf()) }
     var showError by remember { mutableStateOf(false) }
@@ -107,7 +107,12 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
                 onValueChange = { newValue -> viewModel.onPickUpValueChanged(newValue) },
                 placeholder = "Pickup Location",
                 locations = pickupLocationPlaces,
-                onLocationClick = { place -> viewModel.onPlaceClick(place.name) }
+                onLocationClick = { place ->
+                    viewModel.onPlaceClick(place.name)
+                    adModel=adModel.copy(locationId = place.id)
+                    Log.d("CreateAdScreen", "Selected Place ID: ${place.id}") // Log the place.id
+                }
+
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -194,7 +199,7 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
                                         id = UUID.randomUUID().toString(),
                                         userId = userProfile.userId,
                                         imageUrls = imageUrls,
-                                        location = viewModel.pickUp.text
+                                        location = viewModel.pickUp.text,
                                     )
 
                                     adRepository.addAd(newAd)

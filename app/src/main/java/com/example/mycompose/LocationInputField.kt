@@ -1,5 +1,3 @@
-package com.example.mycompose
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,7 +19,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-
+import com.example.mycompose.Place
 
 @Composable
 fun LocationInputField(
@@ -87,7 +85,7 @@ fun LocationInputField(
                     LazyColumn {
                         items(locations) { place ->
                             Text(
-                                text = place.name,
+                                text = place.name, // Show both name and id
                                 modifier = Modifier
                                     .clickable {
                                         onLocationClick(place)
@@ -104,5 +102,3 @@ fun LocationInputField(
         }
     }
 }
-
-

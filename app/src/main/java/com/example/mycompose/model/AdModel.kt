@@ -6,5 +6,6 @@ data class AdModel(
     val description: String,
     val location: String,
     val imageUrls: List<String>,
-    val userId: String // Kullanıcı ID'si
+    val userId: String, // Kullanıcı ID'si
+    val locationId:String
 )

@@ -7,7 +7,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.mycompose.RideViewModel
-import com.example.mycompose.RideScreen
 import com.example.mycompose.view.screens.Home
 import com.example.mycompose.view.screens.Login
 import com.example.mycompose.view.screens.Profile
@@ -51,8 +50,6 @@ fun Navigation(
         composable(Screens.CreateAdScreen.name) {
             CreateAdScreen(navController = navController, viewModel = rideViewModel)
         }
-        composable(Screens.RideScreen.name) {
-            RideScreen(navController = navController)
-        }
+
     }
 }
