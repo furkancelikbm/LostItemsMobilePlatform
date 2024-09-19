@@ -1,4 +1,6 @@
 package com.example.mycompose
 
-class Place {
-}
+data class Place(
+    val id: String = "",
+    val name: String = ""
+)

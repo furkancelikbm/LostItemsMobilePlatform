@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.googleServices)
+    kotlin("plugin.serialization") version "1.9.0"
+
 
 }
 
@@ -97,11 +99,31 @@ dependencies {
 
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
-
     implementation (libs.androidx.runtime.livedata) // Adjust version as needed
 
 
 
+    /*-------------------------*/
+
+
+    // Lifecycle
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
+    implementation (libs.androidx.lifecycle.viewmodel.ktx)
+    implementation (libs.androidx.lifecycle.runtime.compose)
+
+    // Logger
+    implementation(libs.napier)
+
+    // Ktor
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.serialization)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     //coil
     implementation (libs.coil.compose)

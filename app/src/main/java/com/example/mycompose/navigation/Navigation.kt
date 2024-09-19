@@ -1,11 +1,13 @@
 package com.example.mycompose.navigation
 
-import MapScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.mycompose.RideViewModel
+import com.example.mycompose.RideScreen
 import com.example.mycompose.view.screens.Home
 import com.example.mycompose.view.screens.Login
 import com.example.mycompose.view.screens.Profile
@@ -20,6 +22,9 @@ fun Navigation(
     startingScreen: String,
     modifier: Modifier = Modifier
 ) {
+    // Obtain the ViewModel instance
+    val rideViewModel: RideViewModel = viewModel()
+
     NavHost(
         navController = navController,
         startDestination = startingScreen,
@@ -44,13 +49,10 @@ fun Navigation(
             ProfileApp(navController = navController)
         }
         composable(Screens.CreateAdScreen.name) {
-            CreateAdScreen(navController = navController)
+            CreateAdScreen(navController = navController, viewModel = rideViewModel)
         }
-        composable(Screens.MapScreen.name) {
-            MapScreen(navController = navController) { selectedLocation ->
-                // Handle the selected location
-                navController.previousBackStackEntry?.savedStateHandle?.set("location", selectedLocation)
-            }
+        composable(Screens.RideScreen.name) {
+            RideScreen(navController = navController)
         }
     }
 }
