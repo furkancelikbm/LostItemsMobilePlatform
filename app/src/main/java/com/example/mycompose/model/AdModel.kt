@@ -1,5 +1,8 @@
 package com.example.mycompose.model
 
+import com.google.firebase.Timestamp
+import java.time.LocalDateTime
+
 data class AdModel(
     val id: String,
     val title: String,
@@ -7,5 +10,6 @@ data class AdModel(
     val location: String,
     val imageUrls: List<String>,
     val userId: String, // Kullanıcı ID'si
-    val locationId:String
+    val locationId:String,
+    val timestamp:LocalDateTime,
 )

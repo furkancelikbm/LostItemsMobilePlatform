@@ -36,11 +36,12 @@ import com.example.mycompose.repository.AdRepository
 import com.example.mycompose.repository.ProfileRepository
 import com.example.mycompose.view.components.TransparentCircularProgressBar
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Composable
 fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
-    var adModel by remember { mutableStateOf(AdModel("", "", "", "", listOf(), "","")) }
+    var adModel by remember { mutableStateOf(AdModel("", "", "", "", listOf(), "","", LocalDateTime.now()),) }
     var userProfile by remember { mutableStateOf(UserProfile()) }
     var selectedImages by remember { mutableStateOf<List<Pair<Uri, String>>>(listOf()) }
     var showError by remember { mutableStateOf(false) }
@@ -126,6 +127,7 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
 
             )
             Spacer(modifier = Modifier.height(16.dp))
+
 
             AdButton(
                 onClick = {
@@ -220,7 +222,8 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
                                         userId = userProfile.userId,
                                         imageUrls = imageUrls,
                                         location = viewModel.pickUp.text,
-                                        locationId = locationId
+                                        locationId = locationId,
+
                                     )
 
                                     adRepository.addAd(newAd)
