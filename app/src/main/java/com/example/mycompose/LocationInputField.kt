@@ -27,7 +27,8 @@ fun LocationInputField(
     onValueChange: (TextFieldValue) -> Unit,
     placeholder: String,
     locations: List<Place>,
-    onLocationClick: (Place) -> Unit
+    onLocationClick: (Place) -> Unit,
+    checkAndFirstPlace:()->Unit
 ) {
     var showSuggestions by remember { mutableStateOf(true) }
     val focusRequester = remember { FocusRequester() }
@@ -49,6 +50,7 @@ fun LocationInputField(
                     .onFocusChanged { focusState ->
                         if (!focusState.isFocused) {
                             showSuggestions = false // Hide suggestions when not focused
+                            checkAndFirstPlace()  // Focus kaybedildiğinde kontrol et
                         }
                     },
                 decorationBox = { innerTextField ->

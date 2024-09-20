@@ -46,6 +46,9 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var locationId by remember {
+        mutableStateOf("")
+    }
 
     val profileRepository = remember { ProfileRepository() }
     val adRepository = remember { AdRepository() }
@@ -75,8 +78,12 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
                 focusManager.clearFocus() // Clear focus when clicking anywhere in the Box
+                viewModel.checkAndSelectFirstPlace()
             }
     ) {
         Column(
@@ -104,13 +111,17 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
 
             LocationInputField(
                 value = viewModel.pickUp,
-                onValueChange = { newValue -> viewModel.onPickUpValueChanged(newValue) },
+                onValueChange = { newValue -> viewModel.onPickUpValueChanged(newValue)},
                 placeholder = "Pickup Location",
                 locations = pickupLocationPlaces,
                 onLocationClick = { place ->
                     viewModel.onPlaceClick(place.name)
-                    adModel=adModel.copy(locationId = place.id)
+                    locationId = place.id
                     Log.d("CreateAdScreen", "Selected Place ID: ${place.id}") // Log the place.id
+                },
+                checkAndFirstPlace = {viewModel.checkAndSelectFirstPlace()
+                    locationId=viewModel.unSelectedLocationId
+                    Log.d("CreateAdScreen", "unSelected Place ID: ${viewModel.unSelectedLocationId}") // Log the place.id
                 }
 
             )
@@ -131,7 +142,11 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
                         modifier = Modifier
                             .size(150.dp)
                             .padding(4.dp)
-                            .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                            .border(
+                                2.dp,
+                                MaterialTheme.colorScheme.primary,
+                                RoundedCornerShape(8.dp)
+                            )
                     ) {
                         val painter = rememberImagePainter(uri)
                         Image(painter = painter, contentDescription = null, modifier = Modifier.fillMaxSize())
@@ -186,6 +201,11 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
                             errorMessage = "You must add at least one photo."
                             showError = true
                         }
+                        locationId.isEmpty()||locationId=="0"->{
+                            errorMessage = "lütfen geçerli bir yer seçin"
+                            showError = true
+                        }
+
                         else -> {
                             showError = false
                             isLoading = true
@@ -200,6 +220,7 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
                                         userId = userProfile.userId,
                                         imageUrls = imageUrls,
                                         location = viewModel.pickUp.text,
+                                        locationId = locationId
                                     )
 
                                     adRepository.addAd(newAd)

@@ -18,6 +18,8 @@ class RideViewModel : ViewModel() {
 
     var pickUp by mutableStateOf(TextFieldValue(text = ""))
         private set
+    var unSelectedLocationId by mutableStateOf("")
+        private set
 
     private val placesApi = PlacesApi()
 
@@ -45,5 +47,17 @@ class RideViewModel : ViewModel() {
             text = value,
             selection = TextRange(value.length)
         )
+        // Seçilen yerin ID'sini al
+        val place = pickupLocationPlaces.value.find { it.name == value }
+        unSelectedLocationId = place?.id ?: "" // Seçilen yerin ID'sini kaydet
+    }
+    fun checkAndSelectFirstPlace() {
+        // Eğer konum seçilmediyse, ilk öğeyi otomatik olarak seç
+        if (pickupLocationPlaces.value.isNotEmpty()) {
+            val firstPlace = pickupLocationPlaces.value.first()
+            onPlaceClick(firstPlace.name)
+        }else{
+            unSelectedLocationId="0"
+        }
     }
 }
