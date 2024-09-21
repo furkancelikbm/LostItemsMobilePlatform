@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.mycompose.ui.theme.MycomposeTheme
 import com.example.mycompose.view.screens.ProfileApp
+import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,6 +23,8 @@ class MainActivity : ComponentActivity() {
             MycomposeTheme {
                 Surface(modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background) {
+                    FirebaseApp.initializeApp(this) //ne ise yarıyor ekledim öylesine
+
                     ProfileApp(rememberNavController())
                     println("main calisti")
                 } }

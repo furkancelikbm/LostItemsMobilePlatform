@@ -41,7 +41,7 @@ import java.util.UUID
 
 @Composable
 fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
-    var adModel by remember { mutableStateOf(AdModel("", "", "", "", listOf(), "","", LocalDateTime.now()),) }
+    var adModel by remember { mutableStateOf(AdModel("", "", "", "", listOf(), "","", System.currentTimeMillis())) }
     var userProfile by remember { mutableStateOf(UserProfile()) }
     var selectedImages by remember { mutableStateOf<List<Pair<Uri, String>>>(listOf()) }
     var showError by remember { mutableStateOf(false) }
@@ -185,6 +185,7 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
 
             AdButton(
                 onClick = {
+                    focusManager.clearFocus()
                     // Form validation
                     when {
                         adModel.title.isBlank() -> {
@@ -216,7 +217,6 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
                                     val imageUrls = selectedImages.map { (uri, _) ->
                                         adRepository.uploadImage(uri)
                                     }
-
                                     val newAd = adModel.copy(
                                         id = UUID.randomUUID().toString(),
                                         userId = userProfile.userId,

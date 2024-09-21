@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.mycompose.RideViewModel
+import com.example.mycompose.repository.AdRepository
 import com.example.mycompose.view.screens.Home
 import com.example.mycompose.view.screens.Login
 import com.example.mycompose.view.screens.Profile
@@ -39,7 +40,7 @@ fun Navigation(
             Register(navController = navController)
         }
         composable(Screens.Home.name) {
-            Home(navController = navController)
+            Home(navController = navController, adRepository = AdRepository())
         }
         composable(Screens.CompleteProfileScreen.name) {
             CompleteProfileScreen(navController = navController)
