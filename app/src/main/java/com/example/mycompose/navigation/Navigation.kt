@@ -6,7 +6,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.mycompose.RideViewModel
+import com.example.mycompose.viewmodel.LocationInputFieldViewModel
 import com.example.mycompose.repository.AdRepository
 import com.example.mycompose.view.screens.Home
 import com.example.mycompose.view.screens.Login
@@ -23,7 +23,7 @@ fun Navigation(
     modifier: Modifier = Modifier
 ) {
     // Obtain the ViewModel instance
-    val rideViewModel: RideViewModel = viewModel()
+    val rideViewModel: LocationInputFieldViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -49,7 +49,7 @@ fun Navigation(
             ProfileApp(navController = navController)
         }
         composable(Screens.CreateAdScreen.name) {
-            CreateAdScreen(navController = navController, viewModel = rideViewModel)
+            CreateAdScreen(navController = navController)
         }
 
     }

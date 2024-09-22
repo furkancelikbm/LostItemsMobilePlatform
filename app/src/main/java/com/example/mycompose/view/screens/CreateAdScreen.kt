@@ -22,69 +22,33 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
-import com.example.mycompose.RideViewModel
-import com.example.mycompose.model.AdModel
-import com.example.mycompose.model.UserProfile
-import com.example.mycompose.repository.AdRepository
-import com.example.mycompose.repository.ProfileRepository
+import com.example.mycompose.viewmodel.CreateAdScreenViewModel
 import com.example.mycompose.view.components.TransparentCircularProgressBar
-import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.util.UUID
 
 @Composable
-fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
-    var adModel by remember { mutableStateOf(AdModel("", "", "", "", listOf(), "","", System.currentTimeMillis())) }
-    var userProfile by remember { mutableStateOf(UserProfile()) }
-    var selectedImages by remember { mutableStateOf<List<Pair<Uri, String>>>(listOf()) }
-    var showError by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var locationId by remember {
-        mutableStateOf("")
-    }
-
-    val profileRepository = remember { ProfileRepository() }
-    val adRepository = remember { AdRepository() }
-    val coroutineScope = rememberCoroutineScope()
+fun CreateAdScreen(
+    navController: NavHostController,
+    viewModel: CreateAdScreenViewModel = viewModel()
+) {
     val focusManager = LocalFocusManager.current
-
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        uri?.let {
-            if (selectedImages.size < 5) {
-                val uniqueId = UUID.randomUUID().toString()
-                selectedImages = selectedImages + Pair(it, uniqueId)
-            }
-        }
+    ) { uri: Uri? ->
+        uri?.let { viewModel.addImage(it) }
     }
-
-    // Fetch user profile
-    LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            userProfile = profileRepository.getUserProfile()
-        }
-    }
-
-    val pickupLocationPlaces by viewModel.pickupLocationPlaces.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                focusManager.clearFocus() // Clear focus when clicking anywhere in the Box
-                viewModel.checkAndSelectFirstPlace()
+            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                focusManager.clearFocus()
+                viewModel.locationInputFieldViewModel.checkAndSelectFirstPlace()
             }
     ) {
         Column(
@@ -98,68 +62,59 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
 
             AdTextField(
-                value = adModel.title,
-                onValueChange = { adModel = adModel.copy(title = it) },
+                value = viewModel.adModel.value.title,
+                onValueChange = { viewModel.adModel.value = viewModel.adModel.value.copy(title = it) },
                 label = "Title"
             )
+
             Spacer(modifier = Modifier.height(8.dp))
+
             AdTextField(
-                value = adModel.description,
-                onValueChange = { adModel = adModel.copy(description = it) },
+                value = viewModel.adModel.value.description,
+                onValueChange = { viewModel.adModel.value = viewModel.adModel.value.copy(description = it) },
                 label = "Description"
             )
+
             Spacer(modifier = Modifier.height(8.dp))
 
             LocationInputField(
-                value = viewModel.pickUp,
-                onValueChange = { newValue -> viewModel.onPickUpValueChanged(newValue)},
+                value = viewModel.locationInputFieldViewModel.pickUp,
+                onValueChange = { viewModel.locationInputFieldViewModel.onPickUpValueChanged(it) },
                 placeholder = "Pickup Location",
-                locations = pickupLocationPlaces,
+                locations = viewModel.locationInputFieldViewModel.pickupLocationPlaces.collectAsState().value,
                 onLocationClick = { place ->
-                    viewModel.onPlaceClick(place.name)
-                    locationId = place.id
-                    Log.d("CreateAdScreen", "Selected Place ID: ${place.id}") // Log the place.id
+                    viewModel.locationInputFieldViewModel.onPlaceClick(place.name)
+                    viewModel.locationId.value = place.id
+                    Log.d("CreateAdScreen", "Selected Place ID: ${place.id}")
                 },
-                checkAndFirstPlace = {viewModel.checkAndSelectFirstPlace()
-                    locationId=viewModel.unSelectedLocationId
-                    Log.d("CreateAdScreen", "unSelected Place ID: ${viewModel.unSelectedLocationId}") // Log the place.id
+                checkAndFirstPlace = {
+                    viewModel.locationInputFieldViewModel.checkAndSelectFirstPlace()
+                    viewModel.locationId.value = viewModel.locationInputFieldViewModel.unSelectedLocationId
                 }
-
             )
+
             Spacer(modifier = Modifier.height(16.dp))
 
-
             AdButton(
-                onClick = {
-                    galleryLauncher.launch(arrayOf("image/*"))
-                },
+                onClick = { galleryLauncher.launch(arrayOf("image/*")) },
                 text = "Select Photos"
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             LazyRow {
-                items(selectedImages) { (uri, _) ->
+                items(viewModel.selectedImages) { (uri, uniqueId) ->
                     Box(
                         modifier = Modifier
                             .size(150.dp)
                             .padding(4.dp)
-                            .border(
-                                2.dp,
-                                MaterialTheme.colorScheme.primary,
-                                RoundedCornerShape(8.dp)
-                            )
+                            .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
                     ) {
                         val painter = rememberImagePainter(uri)
                         Image(painter = painter, contentDescription = null, modifier = Modifier.fillMaxSize())
 
-                        val uniqueId = selectedImages.find { it.first == uri }?.second
                         IconButton(
-                            onClick = {
-                                uniqueId?.let {
-                                    selectedImages = selectedImages.filter { it.second != uniqueId }
-                                }
-                            },
+                            onClick = { viewModel.removeImage(uniqueId) },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .size(24.dp)
@@ -174,80 +129,23 @@ fun CreateAdScreen(navController: NavHostController, viewModel: RideViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (showError) {
+            if (viewModel.showError.value) {
                 Text(
-                    text = errorMessage,
+                    text = viewModel.errorMessage.value,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            AdButton(
-                onClick = {
-                    focusManager.clearFocus()
-                    // Form validation
-                    when {
-                        adModel.title.isBlank() -> {
-                            errorMessage = "Title cannot be empty."
-                            showError = true
-                        }
-                        adModel.description.isBlank() -> {
-                            errorMessage = "Description cannot be empty."
-                            showError = true
-                        }
-                        viewModel.pickUp.text.isBlank() -> {
-                            errorMessage = "Location cannot be empty."
-                            showError = true
-                        }
-                        selectedImages.isEmpty() -> {
-                            errorMessage = "You must add at least one photo."
-                            showError = true
-                        }
-                        locationId.isEmpty()||locationId=="0"->{
-                            errorMessage = "lütfen geçerli bir yer seçin"
-                            showError = true
-                        }
-
-                        else -> {
-                            showError = false
-                            isLoading = true
-                            coroutineScope.launch {
-                                try {
-                                    val imageUrls = selectedImages.map { (uri, _) ->
-                                        adRepository.uploadImage(uri)
-                                    }
-                                    val newAd = adModel.copy(
-                                        id = UUID.randomUUID().toString(),
-                                        userId = userProfile.userId,
-                                        imageUrls = imageUrls,
-                                        location = viewModel.pickUp.text,
-                                        locationId = locationId,
-
-                                    )
-
-                                    adRepository.addAd(newAd)
-
-                                    viewModel.onPickUpValueChanged(TextFieldValue(""))
-                                    navController.popBackStack()
-                                } catch (e: Exception) {
-                                    Log.e("CreateAdScreen", "Error adding ad: ", e)
-                                } finally {
-                                    isLoading = false
-                                }
-                            }
-                        }
-                    }
-                },
-                text = "Submit"
-            )
+            AdButton(onClick = {
+                focusManager.clearFocus()
+                viewModel.submitAd() }, text = "Submit")
         }
 
-        // Show loading indicator if isLoading is true
-        TransparentCircularProgressBar(isLoading = isLoading)
+        TransparentCircularProgressBar(isLoading = viewModel.isLoading.value)
     }
 }
-
 
 @Composable
 fun AdTextField(value: String, onValueChange: (String) -> Unit, label: String) {
@@ -269,7 +167,5 @@ fun AdButton(onClick: () -> Unit, text: String) {
 @Preview(showBackground = true)
 @Composable
 fun CreateAdScreenPreview() {
-    // Mock viewModel instance or use a proper viewModel provider
-    val mockViewModel = remember { RideViewModel() }
-    CreateAdScreen(navController = rememberNavController(), viewModel = mockViewModel)
+    CreateAdScreen(navController = rememberNavController())
 }

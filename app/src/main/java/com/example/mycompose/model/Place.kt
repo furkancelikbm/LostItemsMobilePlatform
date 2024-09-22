@@ -1,4 +1,4 @@
-package com.example.mycompose
+package com.example.mycompose.model
 
 data class Place(
     val id: String = "",

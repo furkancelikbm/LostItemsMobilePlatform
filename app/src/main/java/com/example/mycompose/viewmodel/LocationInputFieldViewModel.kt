@@ -1,6 +1,6 @@
-package com.example.mycompose
+package com.example.mycompose.viewmodel
 
-import PlacesApi
+import com.example.mycompose.model.PlacesApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,12 +9,13 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mycompose.model.Place
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 
-class RideViewModel : ViewModel() {
+class LocationInputFieldViewModel : ViewModel() {
 
     var pickUp by mutableStateOf(TextFieldValue(text = ""))
         private set

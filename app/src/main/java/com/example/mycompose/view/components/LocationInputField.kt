@@ -11,15 +11,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import com.example.mycompose.Place
+import com.example.mycompose.model.Place
 
 @Composable
 fun LocationInputField(
@@ -28,13 +28,14 @@ fun LocationInputField(
     placeholder: String,
     locations: List<Place>,
     onLocationClick: (Place) -> Unit,
-    checkAndFirstPlace:()->Unit
+    checkAndFirstPlace: () -> Unit
 ) {
     var showSuggestions by remember { mutableStateOf(true) }
     val focusRequester = remember { FocusRequester() }
 
     Box(modifier = Modifier.padding(16.dp)) {
         Column(modifier = Modifier.fillMaxWidth()) {
+            // TextField for input
             BasicTextField(
                 value = value,
                 onValueChange = { newValue ->
@@ -50,7 +51,7 @@ fun LocationInputField(
                     .onFocusChanged { focusState ->
                         if (!focusState.isFocused) {
                             showSuggestions = false // Hide suggestions when not focused
-                            checkAndFirstPlace()  // Focus kaybedildiğinde kontrol et
+                            checkAndFirstPlace() // Check and select the first place when focus is lost
                         }
                     },
                 decorationBox = { innerTextField ->
@@ -68,14 +69,14 @@ fun LocationInputField(
             )
         }
 
-        // Display suggestions as a popup slightly lower than the TextField
+        // Popup for displaying location suggestions
         if (showSuggestions && locations.isNotEmpty()) {
             Popup(
                 alignment = Alignment.TopStart,
-                offset = IntOffset(0, 100), // Popup is offset by 100px below TextField
+                offset = IntOffset(0, 100), // Offset adjusted for better placement below TextField
                 properties = PopupProperties(
                     dismissOnClickOutside = true,
-                    focusable = false // Allows editing the TextField after suggestions show up
+                    focusable = false // Allows user to continue typing after suggestions pop up
                 )
             ) {
                 Box(
@@ -86,17 +87,24 @@ fun LocationInputField(
                 ) {
                     LazyColumn {
                         items(locations) { place ->
-                            Text(
-                                text = place.name, // Show both name and id
+                            Column(
                                 modifier = Modifier
+                                    .fillMaxWidth()
                                     .clickable {
                                         onLocationClick(place)
                                         showSuggestions = false // Hide suggestions after selection
                                     }
                                     .padding(8.dp)
-                                    .fillMaxWidth()
                                     .background(MaterialTheme.colorScheme.surface)
-                            )
+                            ) {
+                                Text(
+                                    text = place.name,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
                 }

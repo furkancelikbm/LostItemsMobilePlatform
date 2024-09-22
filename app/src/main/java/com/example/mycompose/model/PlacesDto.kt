@@ -1,4 +1,4 @@
-package com.example.mycompose
+package com.example.mycompose.model
 
 
 import kotlinx.serialization.Serializable
