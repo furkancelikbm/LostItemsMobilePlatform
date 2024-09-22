@@ -4,5 +4,9 @@ enum class Screens {
     Login,
     Register,
     Profile,
-    Home
+    Home,
+    CompleteProfileScreen,
+    ProfileApp,
+    CreateAdScreen,
+    RideScreen,
 }

@@ -1,5 +1,7 @@
-package com.example.mycompose
+package com.example.mycompose.view.screens
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,8 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -44,56 +44,57 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mycompose.navigation.Screens
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlin.math.sin
 
 @Composable
-fun Register(navController: NavController){
-    val email=remember { mutableStateOf("") }
-    val password=remember { mutableStateOf("") }
-    val confirmPassword=remember { mutableStateOf("") }
-    val passwordVisible=remember { mutableStateOf(false) }
-    val confirmPasswordVisible= remember { mutableStateOf(false) }
+fun Register(navController: NavController) {
+    val context = LocalContext.current
 
-    Box(modifier = Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {
-        Column (
-            modifier= Modifier
+    val email = remember { mutableStateOf("") }
+    val password = remember { mutableStateOf("") }
+    val confirmPassword = remember { mutableStateOf("") }
+    val passwordVisible = remember { mutableStateOf(false) }
+    val confirmPasswordVisible = remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
                 .padding(10.dp)
-                //.background(Color.White)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ){
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = "Register",
-                style = TextStyle(fontWeight= FontWeight.Bold),
+                style = TextStyle(fontWeight = FontWeight.Bold),
                 fontSize = 40.sp
             )
-            Spacer(modifier = Modifier.padding(20.dp))
-            Column (horizontalAlignment = Alignment.CenterHorizontally){
-                OutlinedTextField(value = email.value,
-                    onValueChange ={email.value=it},
-                    label = { Text(text = "Email adress")},
-                    placeholder = { Text(text = "Email adress")},
-                    singleLine=true,
+            Spacer(modifier = Modifier.height(20.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                OutlinedTextField(
+                    value = email.value,
+                    onValueChange = { email.value = it },
+                    label = { Text(text = "Email address") },
+                    placeholder = { Text(text = "Email address") },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth(0.8f)
                 )
 
                 OutlinedTextField(
-                    value =password.value ,
-                    onValueChange = { password.value=it},
+                    value = password.value,
+                    onValueChange = { password.value = it },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible.value = !passwordVisible.value }) {
                             Icon(
                                 imageVector = if (passwordVisible.value) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                contentDescription = "Password visibility",
+                                contentDescription = "Password visibility"
                             )
                         }
                     },
-                    label = { Text(text = "Password")},
-                    placeholder = { Text(text = "Password")},
+                    label = { Text(text = "Password") },
+                    placeholder = { Text(text = "Password") },
                     singleLine = true,
                     visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(0.8f)
@@ -101,81 +102,79 @@ fun Register(navController: NavController){
 
                 OutlinedTextField(
                     value = confirmPassword.value,
-                    onValueChange ={confirmPassword.value=it},
+                    onValueChange = { confirmPassword.value = it },
                     trailingIcon = {
-                        IconButton(onClick = {
-                            confirmPasswordVisible.value=!confirmPasswordVisible.value
-                        })
-                        {
+                        IconButton(onClick = { confirmPasswordVisible.value = !confirmPasswordVisible.value }) {
                             Icon(
-                                imageVector =if (confirmPasswordVisible.value) Icons.Filled.Visibility else Icons.Filled.VisibilityOff ,
+                                imageVector = if (confirmPasswordVisible.value) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                                 contentDescription = "Password visibility"
                             )
                         }
                     },
-                    label = { Text(text = "Confirm Password")},
-                    placeholder = { Text(text = "Confirm Password")},
+                    label = { Text(text = "Confirm Password") },
+                    placeholder = { Text(text = "Confirm Password") },
                     singleLine = true,
                     visualTransformation = if (confirmPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(0.8f)
                 )
 
-                Spacer(modifier = Modifier.padding(10.dp))
-                val controller= LocalContext.current
+                Spacer(modifier = Modifier.height(10.dp))
+
                 Button(
                     onClick = {
-                        if (password.value==confirmPassword.value){
-                            //process create email and password
+                        if (password.value == confirmPassword.value) {
                             FirebaseAuth.getInstance().createUserWithEmailAndPassword(
                                 email.value,
                                 password.value
                             ).addOnSuccessListener {
-                                val userId= FirebaseAuth.getInstance().currentUser?.uid
-                                val user= mutableMapOf<String,Any>()
-                                user["first_name"]="";
-                                user["last_name"]="";
-                                user["profile_picture"]="";
+                                val userId = FirebaseAuth.getInstance().currentUser?.uid
+                                val user = mutableMapOf<String, Any>()
+                                user["first_name"] = ""
+                                user["last_name"] = ""
+                                user["profile_picture"] = ""
 
                                 FirebaseFirestore.getInstance().collection("users").document(userId!!)
                                     .set(user)
-                                    .addOnSuccessListener {  }
-                                    .addOnFailureListener{}
-
-                                navController.navigate(Screens.Profile.name)
+                                    .addOnSuccessListener {
+                                        navController.navigate(Screens.CompleteProfileScreen.name)
+                                    }
+                                    .addOnFailureListener { exception ->
+                                        Log.d("RegisterScreen", "Error saving user data: ${exception.message}")
+                                        Toast.makeText(context, "Error saving user data.", Toast.LENGTH_SHORT).show()
+                                    }
                             }
-                                .addOnFailureListener {
-                                    ///TODO: add codes to handle failure scenario
+                                .addOnFailureListener { exception ->
+                                    Log.d("RegisterScreen", "Registration failed: ${exception.message}")
+                                    Toast.makeText(context, "Registration failed.", Toast.LENGTH_SHORT).show()
                                 }
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
-                        .height(50.dp),
+                        .height(50.dp)
                 ) {
-                    Text(
-                        text ="Register" )
+                    Text(text = "Register")
                 }
 
-                Spacer(modifier = Modifier.padding(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+
                 Row {
-                    Text(text = "Already have an account ?",
-                        )
+                    Text(text = "Already have an account? ")
                     Text(
-                        text ="Login",
-                        modifier = Modifier.clickable (onClick = {
+                        text = "Login",
+                        modifier = Modifier.clickable {
                             navController.navigate(Screens.Login.name)
-                        }),
+                        },
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
 
-                Spacer(modifier = Modifier.padding(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
-
     }
-
 }
+
 
 @Preview(showBackground = true)
 @Composable

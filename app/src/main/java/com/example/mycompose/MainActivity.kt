@@ -10,12 +10,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.mycompose.navigation.Navigation
-import com.example.mycompose.navigation.Screens
 import com.example.mycompose.ui.theme.MycomposeTheme
-import com.google.firebase.auth.FirebaseAuth
+import com.example.mycompose.view.screens.ProfileApp
+import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,9 +23,11 @@ class MainActivity : ComponentActivity() {
             MycomposeTheme {
                 Surface(modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background) {
-                    ProfileApp()
-                }
-            }
+                    FirebaseApp.initializeApp(this) //ne ise yarıyor ekledim öylesine
+
+                    ProfileApp(rememberNavController())
+                    println("main calisti")
+                } }
         }
     }
 }
@@ -40,14 +40,3 @@ fun GreetingPreview() {
     }
 }
 
-@Composable
-fun ProfileApp(navController: NavHostController = rememberNavController()) {
-    val firebaseUser = FirebaseAuth.getInstance().currentUser
-    val startingScreen = if (firebaseUser == null) {
-        Screens.Login.name
-    } else {
-        Screens.Home.name // Updated to 'Home' for direct access
-    }
-
-    Navigation(navController = navController, startingScreen = startingScreen)
-}

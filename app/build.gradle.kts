@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.googleServices)
+    kotlin("plugin.serialization") version "1.9.0"
+
 
 }
 
@@ -11,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.mycompose"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -37,6 +39,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+
     }
     buildFeatures {
         compose = true
@@ -63,6 +66,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.webkit)
     implementation(libs.com.google.firebase)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -80,7 +84,46 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.google.firebase.firestore.ktx)
 
+    /*--------------------------------*/
 
+
+    implementation (libs.play.services.maps)
+    implementation (libs.play.services.location)
+
+    implementation (libs.places) //yerleri göstermesi için
+
+    // Diğer bağımlılıklarınız burada
+    implementation (libs.maps.compose)
+    implementation (libs.play.services.maps.v1802)
+
+
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.androidx.runtime.livedata) // Adjust version as needed
+
+
+
+    /*-------------------------*/
+
+
+    // Lifecycle
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
+    implementation (libs.androidx.lifecycle.viewmodel.ktx)
+    implementation (libs.androidx.lifecycle.runtime.compose)
+
+    // Logger
+    implementation(libs.napier)
+
+    // Ktor
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.serialization)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     //coil
     implementation (libs.coil.compose)
