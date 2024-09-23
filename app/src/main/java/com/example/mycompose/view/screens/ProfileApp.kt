@@ -17,6 +17,7 @@ import com.example.mycompose.viewmodel.ProfileAppViewModel
 import com.example.mycompose.navigation.NavigationViewModel
 import com.example.mycompose.navigation.Navigation
 import com.example.mycompose.view.components.AppScaffold
+import dagger.hilt.android.HiltAndroidApp
 
 @Composable
 fun ProfileApp(navController: NavHostController) {

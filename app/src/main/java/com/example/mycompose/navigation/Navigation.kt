@@ -15,6 +15,7 @@ import com.example.mycompose.view.screens.ProfileApp
 import com.example.mycompose.view.screens.Register
 import com.example.mycompose.ui.CompleteProfileScreen
 import com.example.mycompose.view.screens.CreateAdScreen
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 @Composable
 fun Navigation(
@@ -40,7 +41,7 @@ fun Navigation(
             Register(navController = navController)
         }
         composable(Screens.Home.name) {
-            Home(navController = navController, adRepository = AdRepository())
+            Home(navController = navController)
         }
         composable(Screens.CompleteProfileScreen.name) {
             CompleteProfileScreen(navController = navController)

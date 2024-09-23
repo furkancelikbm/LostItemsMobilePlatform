@@ -6,8 +6,9 @@ import com.example.mycompose.model.AdModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class AdRepository {
+class AdRepository @Inject constructor(){
 
     private val firestore = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance().reference

@@ -3,8 +3,9 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.googleServices)
     kotlin("plugin.serialization") version "1.9.0"
-
-
+    // Add Hilt and Kapt plugins
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -53,6 +54,8 @@ android {
         }
     }
 }
+
+
 
 dependencies {
 
@@ -128,4 +131,15 @@ dependencies {
     //coil
     implementation (libs.coil.compose)
 
+    // Hilt dependencies
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+
+
+}
+
+kapt {
+    correctErrorTypes = true
 }
