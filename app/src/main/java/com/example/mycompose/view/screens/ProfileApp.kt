@@ -20,6 +20,7 @@ import com.example.mycompose.view.components.AppScaffold
 
 @Composable
 fun ProfileApp(navController: NavHostController) {
+    val navController = rememberNavController()
     val navigationViewModel: NavigationViewModel = viewModel()
     val profileAppViewModel: ProfileAppViewModel = viewModel() // ProfileAppViewModel oluşturuldu
     val context = LocalContext.current
