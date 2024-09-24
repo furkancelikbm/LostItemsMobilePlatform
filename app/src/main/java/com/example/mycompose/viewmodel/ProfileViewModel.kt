@@ -8,9 +8,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mycompose.model.UserProfile
 import com.example.mycompose.repository.ProfileRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-
-class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() {
+import javax.inject.Inject
+@HiltViewModel
+class ProfileViewModel @Inject constructor(private val repository: ProfileRepository) : ViewModel() {
     var loading by mutableStateOf(false)
     var userProfile = mutableStateOf(UserProfile())
     var newPicUri = mutableStateOf<Uri?>(null)

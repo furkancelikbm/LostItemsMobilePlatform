@@ -11,16 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mycompose.viewmodel.ProfileViewModel
-import com.example.mycompose.repository.ProfileRepository
-import com.example.mycompose.viewmodel.ProfileViewModelFactory
 import com.example.mycompose.view.components.ProfileImage
 
 @Composable
 fun CompleteProfileScreen(navController: NavController) {
-    val viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(ProfileRepository()))
+    val viewModel: ProfileViewModel = hiltViewModel()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -32,7 +30,9 @@ fun CompleteProfileScreen(navController: NavController) {
             CircularProgressIndicator()
         }
     } else {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.padding(top = 25.dp))
             ProfileImage(
                 imageUrl = viewModel.newPicUri.value ?: Uri.parse(viewModel.userProfile.value.profilePicture),

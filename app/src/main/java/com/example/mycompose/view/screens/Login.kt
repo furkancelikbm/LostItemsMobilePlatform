@@ -112,7 +112,7 @@ fun Login(navController: NavController) {
 
                                 if (firstName.isNotEmpty() && lastName.isNotEmpty() && picUrl.isNotEmpty()) {
                                     // Navigate to Home screen if profile data is complete
-                                    navController.navigate(Screens.Home.name) {
+                                    navController.navigate(Screens.ProfileApp.name) {
                                         popUpTo(Screens.Login.name) { inclusive = true }
                                     }
                                 } else {
