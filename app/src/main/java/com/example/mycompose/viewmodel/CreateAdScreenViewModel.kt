@@ -1,8 +1,10 @@
 package com.example.mycompose.viewmodel
 
 import android.net.Uri
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -39,6 +41,9 @@ class CreateAdScreenViewModel(
     var locationId = mutableStateOf("")
         private set
 
+    var successMessage by mutableStateOf("")
+        private set
+
     val locationInputFieldViewModel = LocationInputFieldViewModel()
 
     init {
@@ -61,7 +66,7 @@ class CreateAdScreenViewModel(
         selectedImages.removeAll { it.second == uniqueId }
     }
 
-    fun submitAd() {
+    fun submitAd(function: () -> Unit) {
         val model = adModel.value
         val profile = userProfile.value
 
@@ -111,6 +116,8 @@ class CreateAdScreenViewModel(
                         showError.value = true
                     } finally {
                         isLoading.value = false
+                        successMessage = "created ad successfully!"
+                        function()
                     }
                 }
             }

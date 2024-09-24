@@ -3,6 +3,7 @@ package com.example.mycompose.view.screens
 import LocationInputField
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -21,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +38,7 @@ fun CreateAdScreen(
     navController: NavHostController,
     viewModel: CreateAdScreenViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -140,7 +143,10 @@ fun CreateAdScreen(
 
             AdButton(onClick = {
                 focusManager.clearFocus()
-                viewModel.submitAd() }, text = "Submit")
+                viewModel.submitAd{
+                    Toast.makeText(context, viewModel.successMessage, Toast.LENGTH_SHORT).show()
+                    navController.navigate("Home")}},
+                text = "Submit")
         }
 
         TransparentCircularProgressBar(isLoading = viewModel.isLoading.value)
