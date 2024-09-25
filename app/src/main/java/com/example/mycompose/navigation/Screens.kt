@@ -8,5 +8,5 @@ enum class Screens {
     CompleteProfileScreen,
     ProfileApp,
     CreateAdScreen,
-    RideScreen,
+    AdDetailScreen,
 }

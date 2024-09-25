@@ -45,4 +45,14 @@ class ProfileRepository @Inject constructor(){
         val uploadTask = storageRef.putFile(uri).await()
         return uploadTask.storage.downloadUrl.await().toString()
     }
+
+    suspend fun getUserProfileByAdUserId(userId: String): UserProfile {
+        val document = firestore.collection("users").document(userId).get().await()
+        return UserProfile(
+            userId = userId,
+            firstName = document.getString("first_name").orEmpty(),
+            lastName = document.getString("last_name").orEmpty(),
+            profilePicture = document.getString("profile_picture").orEmpty()
+        )
+    }
 }

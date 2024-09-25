@@ -2,6 +2,7 @@ package com.example.mycompose.view.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -51,14 +52,16 @@ fun Home(navController: NavController) {
             items(photoItems.value) { ad ->
                 val imageUrl = ad.imageUrls.firstOrNull() ?: ""
                 val title = ad.title
-                PhotoItemView(photoItem = PhotoItem(imageUrl, title))
+                PhotoItemView(photoItem = PhotoItem(imageUrl, title=ad.title,id=ad.id)){
+                    navController.navigate("adDetail/${ad.id}")
+                }
             }
         }
 
 }
 
 @Composable
-fun PhotoItemView(photoItem: PhotoItem) {
+fun PhotoItemView(photoItem: PhotoItem, onClick:()-> Unit) {
     Card(
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -66,6 +69,7 @@ fun PhotoItemView(photoItem: PhotoItem) {
             .fillMaxWidth()
             .aspectRatio(1f)
             .padding(8.dp)
+            .clickable { onClick() }
     ) {
         Column {
             Image(

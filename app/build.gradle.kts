@@ -137,6 +137,12 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
 
+    //pager indicatorw
+    implementation (libs.accompanist.pager)
+    implementation (libs.accompanist.pager.indicators)
+
+
+
 
 }
 

@@ -1,4 +1,5 @@
 [versions]
+accompanistPager = "0.36.0"
 agp = "8.5.2"
 converterGson = "2.9.0"
 hiltAndroid = "2.51.1"
@@ -39,6 +40,8 @@ runtimeLivedata = "1.7.1"
 
 
 [libraries]
+accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
+accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanistPager" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltWork" }

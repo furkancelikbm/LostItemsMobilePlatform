@@ -1,5 +1,6 @@
 package com.example.mycompose.navigation
 
+import AdDetailScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -8,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.mycompose.viewmodel.LocationInputFieldViewModel
 import com.example.mycompose.repository.AdRepository
+import com.example.mycompose.repository.ProfileRepository
 import com.example.mycompose.view.screens.Home
 import com.example.mycompose.view.screens.Login
 import com.example.mycompose.view.screens.Profile
@@ -51,6 +53,16 @@ fun Navigation(
         }
         composable(Screens.CreateAdScreen.name) {
             CreateAdScreen(navController = navController)
+        }
+        composable("adDetail/{adId}") {backStackEntry->
+            val adId=backStackEntry.arguments?.getString("adId")?:""
+
+            AdDetailScreen(
+                navController = navController,
+                adId = adId,
+                adRepository = AdRepository(),
+                profileRepository = ProfileRepository()
+            )
         }
 
     }
