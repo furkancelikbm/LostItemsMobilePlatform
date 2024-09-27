@@ -66,18 +66,21 @@ fun Navigation(
                 profileRepository = ProfileRepository()
             )
         }
-        composable("message/{adId}/{userId}") {backStackEntry->
-            val adId=backStackEntry.arguments?.getString("adId")?:""
-            val userId=backStackEntry.arguments?.getString("userId")?:""
+        composable("message/{adId}/{senderId}/{receiverId}") { backStackEntry ->
+            val adId = backStackEntry.arguments?.getString("adId") ?: ""
+            val senderId = backStackEntry.arguments?.getString("senderId") ?: ""
+            val receiverId = backStackEntry.arguments?.getString("receiverId") ?: ""
 
-            MessageScreen (
-                navController=navController,
-                adId=adId,
-                userId=userId,
+            MessageScreen(
+                navController = navController,
+                adId = adId,
+                senderId = senderId,
+                receiverId = receiverId,
                 messageRepository = MessageRepository()
             )
-
         }
+
+
 
     }
 }

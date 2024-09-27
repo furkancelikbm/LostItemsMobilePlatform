@@ -162,7 +162,7 @@ fun AdDetailScreen(
             // Button for sending a message
             Button(
                 onClick = {
-                    navController.navigate("message/${ad!!.id}/${ad!!.userId}")
+                    navController.navigate("message/${profileRepository.getCurrentUserId()}/${ad!!.userId}")
                 },
                 modifier = Modifier
                     .fillMaxWidth()

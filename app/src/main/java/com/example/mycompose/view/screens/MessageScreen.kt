@@ -1,5 +1,6 @@
 package com.example.mycompose.view.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,15 +32,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.privacysandbox.ads.adservices.adid.AdId
+import coil.compose.AsyncImage
 import com.example.mycompose.model.MessageModel
 import com.example.mycompose.repository.MessageRepository
+import com.example.mycompose.repository.ProfileRepository
 import kotlinx.coroutines.launch
 
 @Composable
 fun MessageScreen(
     navController: NavController,
     adId: String,
-    userId: String,
+    receiverId: String,
+    senderId: String,
     messageRepository: MessageRepository // Inject your repository
 ) {
     var messageContent by remember { mutableStateOf("") }
@@ -65,7 +71,8 @@ fun MessageScreen(
             reverseLayout = true // Scroll from the bottom (most recent message)
         ) {
             items(messages) { message ->
-                MessageItem(message)
+                // Pass receiverId to MessageItem
+                MessageItem(message, senderId, receiverId)
             }
         }
 
@@ -82,16 +89,18 @@ fun MessageScreen(
         // Button to send a message
         Button(
             onClick = {
-                // Use the coroutine scope to handle sending the message
-                coroutineScope.launch {
-                    val message = MessageModel(
-                        senderId = "currentUserId", // Replace with actual sender's ID
-                        receiverId = userId,
-                        messageContent = messageContent
-                    )
-                    // Send the message and refresh the list of messages
-                    messageRepository.sendMessage(adId, message)
-                    messageContent = "" // Clear the input field after sending
+                // Validate message content
+                if (messageContent.isNotBlank()) {
+                    coroutineScope.launch {
+                        val message = MessageModel(
+                            senderId = senderId,
+                            receiverId = receiverId,
+                            messageContent = messageContent
+                        )
+                        // Send the message and refresh the list of messages
+                        messageRepository.sendMessage(adId, message)
+                        messageContent = "" // Clear the input field after sending
+                    }
                 }
             },
             modifier = Modifier.align(Alignment.End)
@@ -102,31 +111,61 @@ fun MessageScreen(
 }
 
 @Composable
-fun MessageItem(message: MessageModel) {
+fun MessageItem(message: MessageModel, senderId: String, receiverId: String) {
+    var senderProfile by remember { mutableStateOf<String?>(null) }
+    var receiverProfile by remember { mutableStateOf<String?>(null) }
+    val profileRepository = ProfileRepository()
+
+    // Fetch profile pictures for sender and receiver in separate LaunchedEffects
+    LaunchedEffect(message.senderId) {
+        senderProfile = profileRepository.getUserProfileByAdUserId(message.senderId).profilePicture
+    }
+    LaunchedEffect(message.receiverId) {
+        receiverProfile = profileRepository.getUserProfileByAdUserId(message.receiverId).profilePicture
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Customize the message bubble based on sender/receiver
-        if (message.senderId == "currentUserId") {
+        // Message received by the current user (show on left)
+        if (message.senderId != senderId) {
+            AsyncImage(
+                model = receiverProfile,
+                contentDescription = "Receiver Profile Picture",
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
-                    .padding(16.dp)
-            ) {
-                Text(text = message.messageContent, color = Color.White)
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
+                    .fillMaxWidth(0.7f)
                     .background(Color.LightGray, RoundedCornerShape(8.dp))
                     .padding(16.dp)
             ) {
                 Text(text = message.messageContent, color = Color.Black)
             }
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                    .padding(16.dp)
+            ) {
+                Text(text = message.messageContent, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            AsyncImage(
+                model = senderProfile,
+                contentDescription = "Sender Profile Picture",
+                modifier = Modifier.size(32.dp)
+            )
         }
     }
 }
