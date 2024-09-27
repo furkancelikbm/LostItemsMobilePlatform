@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.mycompose.viewmodel.LocationInputFieldViewModel
 import com.example.mycompose.repository.AdRepository
+import com.example.mycompose.repository.MessageRepository
 import com.example.mycompose.repository.ProfileRepository
 import com.example.mycompose.view.screens.Home
 import com.example.mycompose.view.screens.Login
@@ -17,6 +18,7 @@ import com.example.mycompose.view.screens.ProfileApp
 import com.example.mycompose.view.screens.Register
 import com.example.mycompose.ui.CompleteProfileScreen
 import com.example.mycompose.view.screens.CreateAdScreen
+import com.example.mycompose.view.screens.MessageScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 
 @Composable
@@ -63,6 +65,18 @@ fun Navigation(
                 adRepository = AdRepository(),
                 profileRepository = ProfileRepository()
             )
+        }
+        composable("message/{adId}/{userId}") {backStackEntry->
+            val adId=backStackEntry.arguments?.getString("adId")?:""
+            val userId=backStackEntry.arguments?.getString("userId")?:""
+
+            MessageScreen (
+                navController=navController,
+                adId=adId,
+                userId=userId,
+                messageRepository = MessageRepository()
+            )
+
         }
 
     }

@@ -155,6 +155,22 @@ fun AdDetailScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+
+            }
+            Spacer(modifier = Modifier.weight(1f)) // Pushes the button to the bottom
+
+            // Button for sending a message
+            Button(
+                onClick = {
+                    navController.navigate("message/${ad!!.id}/${ad!!.userId}")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
+            ) {
+                Text(text = "Send Message", style = MaterialTheme.typography.bodyLarge, color = Color.White)
             }
 
             // Fullscreen image dialog
