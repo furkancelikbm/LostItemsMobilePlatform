@@ -18,6 +18,7 @@ import com.example.mycompose.view.screens.ProfileApp
 import com.example.mycompose.view.screens.Register
 import com.example.mycompose.ui.CompleteProfileScreen
 import com.example.mycompose.view.screens.CreateAdScreen
+import com.example.mycompose.view.screens.MessageBoxScreen
 import com.example.mycompose.view.screens.MessageScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 
@@ -27,8 +28,6 @@ fun Navigation(
     startingScreen: String,
     modifier: Modifier = Modifier
 ) {
-    // Obtain the ViewModel instance
-    val rideViewModel: LocationInputFieldViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -56,6 +55,10 @@ fun Navigation(
         composable(Screens.CreateAdScreen.name) {
             CreateAdScreen(navController = navController)
         }
+        composable(Screens.MessageBoxScreen.name) {
+            MessageBoxScreen(navController = navController,
+                messageRepository = MessageRepository())
+        }
         composable("adDetail/{adId}") {backStackEntry->
             val adId=backStackEntry.arguments?.getString("adId")?:""
 
@@ -76,9 +79,11 @@ fun Navigation(
                 adId = adId,
                 senderId = senderId,
                 receiverId = receiverId,
-                messageRepository = MessageRepository()
+                messageRepository = MessageRepository(),
+                profileRepository =ProfileRepository()
             )
         }
+
 
 
 

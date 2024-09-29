@@ -3,9 +3,11 @@ package com.example.mycompose.view.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Message
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,8 +29,8 @@ fun BottomNavigationBar(navController: NavController, viewModel: NavigationViewM
     val items = listOf(
         NavItem("Home", Icons.Filled.Home, Icons.Outlined.Home),
         NavItem("CreateAdScreen", Icons.Filled.Add, Icons.Outlined.Add),
-        NavItem("Profile", Icons.Filled.Person, Icons.Outlined.Person)
-    )
+        NavItem("MessageBoxScreen",Icons.Filled.Message,Icons.Outlined.Message),
+        NavItem("Profile", Icons.Filled.Person, Icons.Outlined.Person),)
 
     // Get the current route
     val navBackStackEntry by navController.currentBackStackEntryAsState()

@@ -44,20 +44,23 @@ fun MessageScreen(
     adId: String,
     receiverId: String,
     senderId: String,
-    messageRepository: MessageRepository // Inject your repository
+    messageRepository: MessageRepository,
+    profileRepository: ProfileRepository
 ) {
     var messageContent by remember { mutableStateOf("") }
     var messages by remember { mutableStateOf<List<MessageModel>>(emptyList()) }
+    var senderProfile by remember { mutableStateOf("") }
+    var receiverProfile by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // LaunchedEffect will listen for real-time changes from Firestore
     LaunchedEffect(adId) {
-        // Start listening for message updates in real-time
         messageRepository.getMessagesRealtime(adId) { updatedMessages ->
             messages = updatedMessages
         }
+        senderProfile = profileRepository.getUserProfileByAdUserId(senderId).profilePicture
+        receiverProfile = profileRepository.getUserProfileByAdUserId(receiverId).profilePicture
     }
 
-    // Create a coroutine scope for handling button click side effects
     val coroutineScope = rememberCoroutineScope()
 
     Column(
@@ -65,18 +68,21 @@ fun MessageScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Display existing messages
         LazyColumn(
             modifier = Modifier.weight(1f),
-            reverseLayout = true // Scroll from the bottom (most recent message)
+            reverseLayout = true
         ) {
             items(messages) { message ->
-                // Pass receiverId to MessageItem
-                MessageItem(message, senderId, receiverId)
+                MessageItem(
+                    message = message,
+                    senderId = senderId,
+                    receiverId = receiverId,
+                    senderProfile = senderProfile,
+                    receiverProfile = receiverProfile
+                )
             }
         }
 
-        // Input field for typing a new message
         OutlinedTextField(
             value = messageContent,
             onValueChange = { messageContent = it },
@@ -86,43 +92,40 @@ fun MessageScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Button to send a message
         Button(
             onClick = {
-                // Validate message content
                 if (messageContent.isNotBlank()) {
+                    errorMessage = null // Reset error message
                     coroutineScope.launch {
-                        val message = MessageModel(
-                            senderId = senderId,
-                            receiverId = receiverId,
-                            messageContent = messageContent
-                        )
-                        // Send the message and refresh the list of messages
-                        messageRepository.sendMessage(adId, message)
-                        messageContent = "" // Clear the input field after sending
+                        try {
+                            val message = MessageModel(
+                                senderId = senderId,
+                                receiverId = receiverId,
+                                messageContent = messageContent
+                            )
+                            messageRepository.sendMessage(adId, message)
+                            messageContent = "" // Clear input
+                        } catch (e: Exception) {
+                            errorMessage = "Error sending message: ${e.message}"
+                        }
                     }
+                } else {
+                    errorMessage = "Message cannot be empty."
                 }
             },
             modifier = Modifier.align(Alignment.End)
         ) {
             Text("Send")
         }
+
+        errorMessage?.let { error ->
+            Text(text = error, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
+        }
     }
 }
 
 @Composable
-fun MessageItem(message: MessageModel, senderId: String, receiverId: String) {
-    var senderProfile by remember { mutableStateOf<String?>(null) }
-    var receiverProfile by remember { mutableStateOf<String?>(null) }
-    val profileRepository = ProfileRepository()
-
-    // Fetch profile pictures for sender and receiver in separate LaunchedEffects
-    LaunchedEffect(message.senderId) {
-        senderProfile = profileRepository.getUserProfileByAdUserId(message.senderId).profilePicture
-    }
-    LaunchedEffect(message.receiverId) {
-        receiverProfile = profileRepository.getUserProfileByAdUserId(message.receiverId).profilePicture
-    }
+fun MessageItem(message: MessageModel, senderId: String, receiverId: String,senderProfile:String,receiverProfile:String) {
 
     Row(
         modifier = Modifier

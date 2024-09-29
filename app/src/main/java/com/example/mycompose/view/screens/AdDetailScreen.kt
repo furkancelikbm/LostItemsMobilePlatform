@@ -35,6 +35,7 @@ fun AdDetailScreen(
     var selectedImage by remember { mutableStateOf<String?>(null) } // For fullscreen image
     var userProfile by remember { mutableStateOf<UserProfile?>(null) }
 
+
     // Fetch ad details and user profile
     LaunchedEffect(adId) {
         try {
@@ -155,22 +156,27 @@ fun AdDetailScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-
             }
             Spacer(modifier = Modifier.weight(1f)) // Pushes the button to the bottom
+            // Get current user ID
+            val senderId = profileRepository.getCurrentUserId()
+            val receiverId = userProfile!!.userId
 
-            // Button for sending a message
-            Button(
-                onClick = {
-                    navController.navigate("message/${profileRepository.getCurrentUserId()}/${ad!!.userId}")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
-            ) {
-                Text(text = "Send Message", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+            // Show Send Message button only if senderId is not equal to receiverId
+            if (senderId != receiverId) {
+                Button(
+                    onClick = {
+                        navController.navigate("message/${adId}/${senderId}/${receiverId}")
+                        Log.d("MessageScreen", "Sender: $senderId, Receiver: $receiverId")
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(text = "Send Message", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                }
             }
 
             // Fullscreen image dialog
