@@ -163,10 +163,10 @@ fun AdDetailScreen(
             val receiverId = userProfile!!.userId
 
             // Show Send Message button only if senderId is not equal to receiverId
-            if (senderId != receiverId) {
+            if (1>0) {
                 Button(
                     onClick = {
-                        navController.navigate("message/${adId}/${senderId}/${receiverId}")
+                        navController.navigate("message/${adId}/${receiverId}/${senderId}")
                         Log.d("MessageScreen", "Sender: $senderId, Receiver: $receiverId")
                     },
                     modifier = Modifier

@@ -54,7 +54,7 @@ fun MessageScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(adId) {
-        messageRepository.getMessagesRealtime(adId) { updatedMessages ->
+        messageRepository.getMessagesRealtime(adId,receiverId) { updatedMessages ->
             messages = updatedMessages
         }
         senderProfile = profileRepository.getUserProfileByAdUserId(senderId).profilePicture
@@ -78,7 +78,7 @@ fun MessageScreen(
                     senderId = senderId,
                     receiverId = receiverId,
                     senderProfile = senderProfile,
-                    receiverProfile = receiverProfile
+                    receiverProfile = receiverProfile,
                 )
             }
         }
@@ -98,12 +98,7 @@ fun MessageScreen(
                     errorMessage = null // Reset error message
                     coroutineScope.launch {
                         try {
-                            val message = MessageModel(
-                                senderId = senderId,
-                                receiverId = receiverId,
-                                messageContent = messageContent
-                            )
-                            messageRepository.sendMessage(adId, message)
+                            messageRepository.sendMessage(adId, receiverId,messageContent)
                             messageContent = "" // Clear input
                         } catch (e: Exception) {
                             errorMessage = "Error sending message: ${e.message}"

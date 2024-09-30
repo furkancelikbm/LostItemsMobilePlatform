@@ -5,33 +5,61 @@ import com.example.mycompose.model.MessageModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 
 class MessageRepository {
     private val firestore = FirebaseFirestore.getInstance()
 
-    // Method to send a new message to a specific ad's private room
-    suspend fun sendMessage(adId: String, message: MessageModel) {
+    // Mesaj gönderme metodu
+    suspend fun sendMessage(adId: String, receiverId: String, content: String) {
+        val senderId = getCurrentUserId() ?: return
+        val roomId = createRoomId(adId, senderId, receiverId) // Oda ID'sini oluştur
+
+        // Yeni mesaj oluştur
+        val message = MessageModel(
+            senderId = senderId,
+            receiverId = receiverId,
+            messageContent = content,
+            adId = adId,
+            roomId = roomId)
+
         try {
-            firestore.collection("message")
-                .document(adId) // Use adId as the document ID for each conversation
-                .collection("messages") // Reference the messages sub-collection
-                .add(message) // Add the message
-                .await() // Wait for the operation to complete
+            // Mesajı özel odanın alt koleksiyonuna ekle
+            firestore.collection("messages")
+                .document(roomId)
+                .collection("messages")
+                .add(message)
+                .await()
+
+            // Oda dökümanını son mesaj ve zaman damgasıyla güncelle veya oluştur
+            val roomData = mapOf(
+                "lastMessage" to content,
+                "lastMessageTimestamp" to System.currentTimeMillis()
+            )
+
+            firestore.collection("messages")
+                .document(roomId)
+                .set(roomData, SetOptions.merge()) // Belge yoksa oluştur, varsa güncelle
+                .await()
+
         } catch (e: Exception) {
-            Log.e("MessageRepository", "Error sending message: ${e.message}")
+            Log.e("MessageRepository", "Mesaj gönderilirken hata oluştu: ${e.message}")
         }
     }
 
-    // Method to fetch messages in real-time for a specific ad's private room
-    fun getMessagesRealtime(adId: String, onMessagesChanged: (List<MessageModel>) -> Unit) {
-        firestore.collection("message")
-            .document(adId) // Use adId to reference the specific conversation document
-            .collection("messages") // Reference the messages sub-collection
-            .orderBy("timestamp", Query.Direction.DESCENDING) // Assuming you have a timestamp field
+    // Mesajları gerçek zamanlı olarak alma metodu
+    fun getMessagesRealtime(adId: String, receiverId: String, onMessagesChanged: (List<MessageModel>) -> Unit) {
+        val senderId = getCurrentUserId() ?: return
+        val roomId = createRoomId(adId, senderId, receiverId) // Oda ID'sini oluştur
+
+        firestore.collection("messages")
+            .document(roomId) // Oda ID'si
+            .collection("messages") // Mesajlar alt koleksiyonu
+            .orderBy("timestamp", Query.Direction.DESCENDING) // Zaman damgasına göre sıralama
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    Log.w("MessageRepository", "Listen failed.", e)
+                    Log.w("MessageRepository", "Mesajlar dinlenirken hata oluştu.", e)
                     return@addSnapshotListener
                 }
 
@@ -44,36 +72,16 @@ class MessageRepository {
             }
     }
 
-    // Fetch messages for the current user from their conversations
-    suspend fun getMessagesForCurrentUser(): List<MessageModel> {
-        val currentUserId = getCurrentUserId()
-        val messages = mutableListOf<MessageModel>()
 
-        // Fetch messages from all conversation documents related to the current user
-        val snapshot = firestore.collection("message")
-            .get()
-            .await() // Get all conversation documents
-
-        for (conversation in snapshot.documents) {
-            // Fetch messages from each conversation's messages sub-collection
-            val messagesSnapshot = firestore.collection("message")
-                .document(conversation.id)
-                .collection("messages")
-                .whereEqualTo("receiverId", currentUserId) // Adjust according to your use case
-                .get()
-                .await()
-
-            for (doc in messagesSnapshot.documents) {
-                val message = doc.toObject(MessageModel::class.java)
-                message?.let { messages.add(it) }
-            }
-        }
-        return messages
+    // Şu anki kullanıcı ID'sini alma
+    private fun getCurrentUserId(): String? {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        return currentUser?.uid // Eğer kullanıcı giriş yapmamışsa null döner
     }
 
-    // Get the current user ID
-    fun getCurrentUserId(): String? {
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        return currentUser?.uid // Returns null if no user is logged in
+    // Özel oda ID'sini oluşturma metodu
+    private fun createRoomId(adId: String, userId1: String, userId2: String): String {
+
+        return "$adId-$userId1-$userId2"
     }
 }

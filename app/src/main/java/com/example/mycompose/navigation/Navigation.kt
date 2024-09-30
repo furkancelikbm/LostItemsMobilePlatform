@@ -56,8 +56,7 @@ fun Navigation(
             CreateAdScreen(navController = navController)
         }
         composable(Screens.MessageBoxScreen.name) {
-            MessageBoxScreen(navController = navController,
-                messageRepository = MessageRepository())
+            MessageBoxScreen(navController = navController)
         }
         composable("adDetail/{adId}") {backStackEntry->
             val adId=backStackEntry.arguments?.getString("adId")?:""
@@ -69,7 +68,7 @@ fun Navigation(
                 profileRepository = ProfileRepository()
             )
         }
-        composable("message/{adId}/{senderId}/{receiverId}") { backStackEntry ->
+        composable("message/{adId}/{receiverId}/{senderId}") { backStackEntry ->
             val adId = backStackEntry.arguments?.getString("adId") ?: ""
             val senderId = backStackEntry.arguments?.getString("senderId") ?: ""
             val receiverId = backStackEntry.arguments?.getString("receiverId") ?: ""
