@@ -2,6 +2,7 @@ package com.example.mycompose.repository
 
 import android.util.Log
 import com.example.mycompose.model.MessageModel
+import com.example.mycompose.model.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -22,7 +23,8 @@ class MessageRepository {
             receiverId = receiverId,
             messageContent = content,
             adId = adId,
-            roomId = roomId)
+            roomId = roomId
+        )
 
         try {
             // Mesajı özel odanın alt koleksiyonuna ekle
@@ -43,6 +45,7 @@ class MessageRepository {
                 .set(roomData, SetOptions.merge()) // Belge yoksa oluştur, varsa güncelle
                 .await()
 
+            Log.d("MessageRepository", "Mesaj başarıyla gönderildi: $content")
         } catch (e: Exception) {
             Log.e("MessageRepository", "Mesaj gönderilirken hata oluştu: ${e.message}")
         }
@@ -68,20 +71,80 @@ class MessageRepository {
                         doc.toObject(MessageModel::class.java)
                     }
                     onMessagesChanged(messageList)
+                    Log.d("MessageRepository", "Mesajlar başarıyla alındı: $messageList")
+                } else {
+                    Log.d("MessageRepository", "Mesaj bulunamadı.")
                 }
             }
     }
 
+    // Kullanıcıyla ilgili tüm odalardan son mesajları al
+    suspend fun getRoomsForCurrentUser(): List<Pair<MessageModel, UserProfile>> {
+        val currentUserId = getCurrentUserId() ?: return emptyList()
+        val rooms = mutableMapOf<String, Pair<MessageModel, UserProfile>>() // Oda ID'sine göre benzersiz odalar
+
+        try {
+            // Kullanıcının gönderdiği veya aldığı mesajları al
+            val messageSnapshots = firestore.collectionGroup("messages")
+                .whereEqualTo("senderId", currentUserId)
+                .get()
+                .await()
+                .documents +
+                    firestore.collectionGroup("messages")
+                        .whereEqualTo("receiverId", currentUserId)
+                        .get()
+                        .await()
+                        .documents
+
+            Log.d("MessageRepository", "Toplam mesaj sayısı: ${messageSnapshots.size}")
+
+            // Her mesaj için odaları belirle
+            for (doc in messageSnapshots) {
+                val message = doc.toObject(MessageModel::class.java) ?: continue
+                val roomId = message.roomId ?: continue
+
+                // Eğer oda daha önce eklenmemişse
+                if (!rooms.containsKey(roomId)) {
+                    // Alıcıyı al
+                    val receiverId = if (message.senderId == currentUserId) message.receiverId else message.senderId
+                    val receiverProfile = firestore.collection("users")
+                        .document(receiverId)
+                        .get()
+                        .await()
+                        .toObject(UserProfile::class.java)
+
+                    if (receiverProfile != null) {
+                        rooms[roomId] = Pair(message, receiverProfile) // Oda ve alıcı profili ekle
+                        Log.d("MessageRepository", "Oda eklendi: $roomId, Alıcı: $receiverId")
+                    } else {
+                        Log.e("MessageRepository", "Alıcı profili bulunamadı: $receiverId")
+                    }
+                } else {
+                    // Oda zaten mevcutsa, sadece son mesajı güncelle
+                    val existingMessage = rooms[roomId]?.first
+                    if (existingMessage == null || message.timestamp > existingMessage.timestamp) {
+                        rooms[roomId] = Pair(message, rooms[roomId]!!.second) // Son mesajı güncelle
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("MessageRepository", "Odalar getirilirken hata oluştu: ${e.message}")
+        }
+
+        return rooms.values.toList() // Benzersiz odaları döner
+    }
 
     // Şu anki kullanıcı ID'sini alma
     private fun getCurrentUserId(): String? {
         val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
+            Log.e("MessageRepository", "Kullanıcı giriş yapmamış!")
+        }
         return currentUser?.uid // Eğer kullanıcı giriş yapmamışsa null döner
     }
 
     // Özel oda ID'sini oluşturma metodu
     private fun createRoomId(adId: String, userId1: String, userId2: String): String {
-
         return "$adId-$userId1-$userId2"
     }
 }
