@@ -1,17 +1,14 @@
 package com.example.mycompose.view.screens
 
 import android.util.Log
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mycompose.model.MessageModel
@@ -38,29 +35,22 @@ fun MessageBoxScreen(
             setLoading(true)
             val fetchedRooms = messageRepository.getRoomsForCurrentUser()
 
-            // Log the fetched data
             Log.d("MessageBoxScreen", "Fetched rooms: $fetchedRooms")
 
-            // Get the current user ID
             val currentUserId = profileRepository.getCurrentUserId()
 
-            // Pair messages with their corresponding user profiles
             val pairedRooms = fetchedRooms.map { room ->
-                // Determine the receiverId
                 val receiverId = if (room.first.senderId == currentUserId) {
                     room.first.receiverId
                 } else {
                     room.first.senderId
                 }
 
-                // Fetch the user profile for the receiverId
                 val userProfile = profileRepository.getUserProfileByAdUserId(receiverId)
 
-                // Return a pair of message and user profile
                 Pair(room.first, userProfile)
             }
 
-            // Set the paired rooms
             setRooms(pairedRooms)
         } catch (e: Exception) {
             setErrorMessage(e.message)
@@ -85,55 +75,80 @@ fun MessageBoxContent(
     errorMessage: String?,
     navController: NavController
 ) {
-    if (isLoading) {
-        CircularProgressIndicator()
-    } else if (errorMessage != null) {
-        Text(text = errorMessage, color = Color.Red)
-    } else {
-        LazyColumn {
-            items(rooms) { (message, profile) ->
-                MessageCard(message = message, userProfile = profile)
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (errorMessage != null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = errorMessage, color = Color.Red)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                items(rooms) { (message, profile) ->
+                    MessageCard(message = message, userProfile = profile, navController = navController)
+                }
             }
         }
     }
 }
 
 @Composable
-fun MessageCard(message: MessageModel, userProfile: UserProfile) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    ) {
-        AsyncImage(
-            model = userProfile.profilePicture,
-            contentDescription = "Profile Image",
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-        )
+fun MessageCard(
+    message: MessageModel,
+    userProfile: UserProfile,
+    navController: NavController,
+) {
+    // Create a modifier for the card
+    val modifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp)
+        .background(Color.White, MaterialTheme.shapes.medium)
+        .clip(MaterialTheme.shapes.medium)
+        .clickable {
+            // Navigate to the message screen with adId, receiverId, and senderId
+            navController.navigate("message/${message.adId}/${userProfile.userId}/${message.senderId}")
+        }
+        .border(1.dp, Color.LightGray) // Border for the striped effect
+        .padding(16.dp)
 
-        Text(
-            text = "${userProfile.firstName} ${userProfile.lastName}",
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        // Last message
-        Text(
-            text = message.messageContent,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
-        )
-
-        // Timestamp formatting
-        val formattedTimestamp = formatTimestamp(message.timestamp)
-        Text(
-            text = "Last message: $formattedTimestamp",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
-        )
+    Column(modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AsyncImage(
+                model = userProfile.profilePicture,
+                contentDescription = "Profile Image",
+                modifier = Modifier
+                    .size(60.dp) // Increased size for the profile image
+                    .clip(CircleShape)
+            )
+            Spacer(modifier = Modifier.width(12.dp)) // Increased spacing
+            Column {
+                Text(
+                    text = "${userProfile.firstName} ${userProfile.lastName}",
+                    style = MaterialTheme.typography.titleMedium, // Larger text style
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp)) // Added spacing between texts
+                Text(
+                    text = message.messageContent,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(4.dp)) // Added spacing
+                val formattedTimestamp = formatTimestamp(message.timestamp)
+                Text(
+                    text = "Last message: $formattedTimestamp",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+        }
     }
 }
+
 
 // Helper function to format timestamp
 fun formatTimestamp(timestamp: Long): String {
