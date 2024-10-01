@@ -45,20 +45,29 @@ fun MessageScreen(
     receiverId: String,
     senderId: String,
     messageRepository: MessageRepository,
-    profileRepository: ProfileRepository
+    profileRepository: ProfileRepository,
+    adTitle: String // Assuming ad title is passed to the screen
 ) {
     var messageContent by remember { mutableStateOf("") }
     var messages by remember { mutableStateOf<List<MessageModel>>(emptyList()) }
     var senderProfile by remember { mutableStateOf("") }
     var receiverProfile by remember { mutableStateOf("") }
+    var senderName by remember { mutableStateOf("") }
+    var receiverName by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(adId) {
-        messageRepository.getMessagesRealtime(adId,receiverId) { updatedMessages ->
+        messageRepository.getMessagesRealtime(adId, receiverId) { updatedMessages ->
             messages = updatedMessages
         }
-        senderProfile = profileRepository.getUserProfileByAdUserId(senderId).profilePicture
-        receiverProfile = profileRepository.getUserProfileByAdUserId(receiverId).profilePicture
+        // Fetch profiles and names
+        val senderProfileData = profileRepository.getUserProfileByAdUserId(senderId)
+        val receiverProfileData = profileRepository.getUserProfileByAdUserId(receiverId)
+
+        senderProfile = senderProfileData.profilePicture
+        receiverProfile = receiverProfileData.profilePicture
+        senderName = "${senderProfileData.firstName} ${senderProfileData.lastName}"
+        receiverName = "${receiverProfileData.firstName} ${receiverProfileData.lastName}"
     }
 
     val coroutineScope = rememberCoroutineScope()
@@ -68,6 +77,11 @@ fun MessageScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // Display ad title and user names
+        Text(text = adTitle, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
+        Text(text = "Chat with $receiverName", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 16.dp))
+        Text(text = "sen $senderName", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 16.dp))
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             reverseLayout = true
@@ -79,6 +93,8 @@ fun MessageScreen(
                     receiverId = receiverId,
                     senderProfile = senderProfile,
                     receiverProfile = receiverProfile,
+                    senderName = senderName,
+                    receiverName = receiverName
                 )
             }
         }
@@ -98,7 +114,7 @@ fun MessageScreen(
                     errorMessage = null // Reset error message
                     coroutineScope.launch {
                         try {
-                            messageRepository.sendMessage(adId, receiverId,messageContent)
+                            messageRepository.sendMessage(adId, receiverId, messageContent)
                             messageContent = "" // Clear input
                         } catch (e: Exception) {
                             errorMessage = "Error sending message: ${e.message}"
@@ -120,8 +136,15 @@ fun MessageScreen(
 }
 
 @Composable
-fun MessageItem(message: MessageModel, senderId: String, receiverId: String,senderProfile:String,receiverProfile:String) {
-
+fun MessageItem(
+    message: MessageModel,
+    senderId: String,
+    receiverId: String,
+    senderProfile: String,
+    receiverProfile: String,
+    senderName: String,
+    receiverName: String
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -137,24 +160,30 @@ fun MessageItem(message: MessageModel, senderId: String, receiverId: String,send
             )
             Spacer(modifier = Modifier.width(8.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .background(Color.LightGray, RoundedCornerShape(8.dp))
-                    .padding(16.dp)
-            ) {
-                Text(text = message.messageContent, color = Color.Black)
+            Column {
+                Text(text = receiverName, style = MaterialTheme.typography.bodyMedium)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .background(Color.LightGray, RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                ) {
+                    Text(text = message.messageContent, color = Color.Black)
+                }
             }
         } else {
             Spacer(modifier = Modifier.weight(1f))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
-                    .padding(16.dp)
-            ) {
-                Text(text = message.messageContent, color = Color.White)
+            Column {
+                Text(text = senderName, style = MaterialTheme.typography.bodyMedium)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                ) {
+                    Text(text = message.messageContent, color = Color.White)
+                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))

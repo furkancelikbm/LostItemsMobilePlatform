@@ -143,8 +143,10 @@ class MessageRepository {
         return currentUser?.uid // Eğer kullanıcı giriş yapmamışsa null döner
     }
 
-    // Özel oda ID'sini oluşturma metodu
     private fun createRoomId(adId: String, userId1: String, userId2: String): String {
-        return "$adId-$userId1-$userId2"
+        // Sort user IDs to maintain consistency
+        val sortedUserIds = listOf(userId1, userId2).sorted()
+        return "${adId}-${sortedUserIds[0]}-${sortedUserIds[1]}"
     }
+
 }

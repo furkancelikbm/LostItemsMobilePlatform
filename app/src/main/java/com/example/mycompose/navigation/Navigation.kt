@@ -73,15 +73,20 @@ fun Navigation(
             val senderId = backStackEntry.arguments?.getString("senderId") ?: ""
             val receiverId = backStackEntry.arguments?.getString("receiverId") ?: ""
 
+            // Fetch or calculate the adTitle from a data source or the navigation argument
+            val adTitle = "Some Ad Title" // Replace this with your logic
+
             MessageScreen(
                 navController = navController,
                 adId = adId,
                 senderId = senderId,
                 receiverId = receiverId,
                 messageRepository = MessageRepository(),
-                profileRepository =ProfileRepository()
+                profileRepository = ProfileRepository(),
+                adTitle = adTitle // Now passing the required parameter
             )
         }
+
 
 
 

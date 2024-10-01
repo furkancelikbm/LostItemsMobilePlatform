@@ -89,7 +89,7 @@ fun MessageBoxContent(
                 modifier = Modifier.padding(16.dp)
             ) {
                 items(rooms) { (message, profile) ->
-                    MessageCard(message = message, userProfile = profile, navController = navController)
+                    MessageCard(message = message, userProfile = profile, navController = navController, profileRepository = ProfileRepository())
                 }
             }
         }
@@ -101,6 +101,7 @@ fun MessageCard(
     message: MessageModel,
     userProfile: UserProfile,
     navController: NavController,
+    profileRepository: ProfileRepository
 ) {
     // Create a modifier for the card
     val modifier = Modifier
@@ -110,7 +111,10 @@ fun MessageCard(
         .clip(MaterialTheme.shapes.medium)
         .clickable {
             // Navigate to the message screen with adId, receiverId, and senderId
-            navController.navigate("message/${message.adId}/${userProfile.userId}/${message.senderId}")
+            val senderId=profileRepository.getCurrentUserId()
+            navController.navigate("message/${message.adId}/${userProfile.userId}/${senderId}")
+            Log.d("MessageCard", "Ad ID: ${message.adId}, alıcı: ${userProfile.firstName}, gonderici: ${message.senderId}")
+
         }
         .border(1.dp, Color.LightGray) // Border for the striped effect
         .padding(16.dp)

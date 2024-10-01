@@ -159,11 +159,11 @@ fun AdDetailScreen(
             }
             Spacer(modifier = Modifier.weight(1f)) // Pushes the button to the bottom
             // Get current user ID
-            val senderId = profileRepository.getCurrentUserId()
             val receiverId = userProfile!!.userId
+            val senderId = profileRepository.getCurrentUserId()
 
             // Show Send Message button only if senderId is not equal to receiverId
-            if (1>0) {
+            if (senderId != receiverId) {
                 Button(
                     onClick = {
                         navController.navigate("message/${adId}/${receiverId}/${senderId}")
