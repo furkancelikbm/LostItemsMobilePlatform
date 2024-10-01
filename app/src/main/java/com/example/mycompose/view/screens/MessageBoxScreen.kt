@@ -1,34 +1,33 @@
 package com.example.mycompose.view.screens
 
 import android.util.Log
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.mycompose.model.MessageModel
+import com.example.mycompose.model.UserProfile
 import com.example.mycompose.repository.MessageRepository
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
+import com.example.mycompose.repository.ProfileRepository
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import com.example.mycompose.model.UserProfile
 
 @Composable
 fun MessageBoxScreen(
     navController: NavController
 ) {
+    val profileRepository = ProfileRepository()
     val messageRepository = MessageRepository()
     val (rooms, setRooms) = remember { mutableStateOf<List<Pair<MessageModel, UserProfile>>>(emptyList()) }
     val (isLoading, setLoading) = remember { mutableStateOf(true) }
@@ -42,7 +41,27 @@ fun MessageBoxScreen(
             // Log the fetched data
             Log.d("MessageBoxScreen", "Fetched rooms: $fetchedRooms")
 
-            setRooms(fetchedRooms)
+            // Get the current user ID
+            val currentUserId = profileRepository.getCurrentUserId()
+
+            // Pair messages with their corresponding user profiles
+            val pairedRooms = fetchedRooms.map { room ->
+                // Determine the receiverId
+                val receiverId = if (room.first.senderId == currentUserId) {
+                    room.first.receiverId
+                } else {
+                    room.first.senderId
+                }
+
+                // Fetch the user profile for the receiverId
+                val userProfile = profileRepository.getUserProfileByAdUserId(receiverId)
+
+                // Return a pair of message and user profile
+                Pair(room.first, userProfile)
+            }
+
+            // Set the paired rooms
+            setRooms(pairedRooms)
         } catch (e: Exception) {
             setErrorMessage(e.message)
             Log.e("MessageBoxScreen", "Error fetching rooms: ${e.message}")
@@ -83,10 +102,9 @@ fun MessageBoxContent(
 fun MessageCard(message: MessageModel, userProfile: UserProfile) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(8.dp)
     ) {
-        // Profile picture
         AsyncImage(
             model = userProfile.profilePicture,
             contentDescription = "Profile Image",
@@ -95,7 +113,6 @@ fun MessageCard(message: MessageModel, userProfile: UserProfile) {
                 .clip(CircleShape)
         )
 
-        // Full name
         Text(
             text = "${userProfile.firstName} ${userProfile.lastName}",
             style = MaterialTheme.typography.bodyMedium
@@ -108,11 +125,25 @@ fun MessageCard(message: MessageModel, userProfile: UserProfile) {
             color = Color.Gray
         )
 
-        // Timestamp
+        // Timestamp formatting
+        val formattedTimestamp = formatTimestamp(message.timestamp)
         Text(
-            text = "Last message: ${message.timestamp}",
+            text = "Last message: $formattedTimestamp",
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
         )
+    }
+}
+
+// Helper function to format timestamp
+fun formatTimestamp(timestamp: Long): String {
+    val currentDate = System.currentTimeMillis()
+    val differenceInMillis = currentDate - timestamp
+    return when {
+        differenceInMillis < 24 * 60 * 60 * 1000 -> "Today"
+        differenceInMillis < 48 * 60 * 60 * 1000 -> "Yesterday"
+        else -> {
+            java.text.SimpleDateFormat("MM/dd/yyyy", java.util.Locale.getDefault()).format(java.util.Date(timestamp))
+        }
     }
 }

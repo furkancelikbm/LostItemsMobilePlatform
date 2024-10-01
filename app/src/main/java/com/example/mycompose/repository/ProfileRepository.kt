@@ -53,6 +53,7 @@ class ProfileRepository @Inject constructor(){
         )
     }
 
+
     fun getCurrentUserId(): String? {
         val currentUser = FirebaseAuth.getInstance().currentUser
         return currentUser?.uid // Returns null if no user is logged in
