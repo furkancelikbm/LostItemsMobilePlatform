@@ -1,42 +1,20 @@
 package com.example.mycompose.view.screens
 
-import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.privacysandbox.ads.adservices.adid.AdId
+import com.example.mycompose.viewmodel.MessageViewModel
 import coil.compose.AsyncImage
 import com.example.mycompose.model.MessageModel
-import com.example.mycompose.repository.MessageRepository
-import com.example.mycompose.repository.ProfileRepository
-import kotlinx.coroutines.launch
 
 @Composable
 fun MessageScreen(
@@ -44,33 +22,20 @@ fun MessageScreen(
     adId: String,
     receiverId: String,
     senderId: String,
-    messageRepository: MessageRepository,
-    profileRepository: ProfileRepository,
-    adTitle: String // Assuming ad title is passed to the screen
+    messageViewModel: MessageViewModel
 ) {
-    var messageContent by remember { mutableStateOf("") }
-    var messages by remember { mutableStateOf<List<MessageModel>>(emptyList()) }
-    var senderProfile by remember { mutableStateOf("") }
-    var receiverProfile by remember { mutableStateOf("") }
-    var senderName by remember { mutableStateOf("") }
-    var receiverName by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val messages by remember { messageViewModel.messages }
+    val senderProfile by remember { messageViewModel.senderProfile }
+    val receiverProfile by remember { messageViewModel.receiverProfile }
+    val senderName by remember { messageViewModel.senderName }
+    val receiverName by remember { messageViewModel.receiverName }
+    val errorMessage by remember { messageViewModel.errorMessage }
+    var messageContent by remember { mutableStateOf(messageViewModel.messageContent.value) }
 
+    // Fetch chat data when the screen is launched
     LaunchedEffect(adId) {
-        messageRepository.getMessagesRealtime(adId, receiverId) { updatedMessages ->
-            messages = updatedMessages
-        }
-        // Fetch profiles and names
-        val senderProfileData = profileRepository.getUserProfileByAdUserId(senderId)
-        val receiverProfileData = profileRepository.getUserProfileByAdUserId(receiverId)
-
-        senderProfile = senderProfileData.profilePicture
-        receiverProfile = receiverProfileData.profilePicture
-        senderName = "${senderProfileData.firstName} ${senderProfileData.lastName}"
-        receiverName = "${receiverProfileData.firstName} ${receiverProfileData.lastName}"
+        messageViewModel.fetchChatData(adId, receiverId, senderId)
     }
-
-    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -78,7 +43,7 @@ fun MessageScreen(
             .padding(16.dp)
     ) {
         // Display ad title and user names
-        Text(text = adTitle, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
+        Text(text = adId, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
         Text(text = "Chat with $receiverName", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 16.dp))
         Text(text = "sen $senderName", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 16.dp))
 
@@ -101,7 +66,10 @@ fun MessageScreen(
 
         OutlinedTextField(
             value = messageContent,
-            onValueChange = { messageContent = it },
+            onValueChange = {
+                messageContent = it
+                messageViewModel.messageContent.value = it // Update ViewModel
+            },
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Type a message") }
         )
@@ -110,19 +78,8 @@ fun MessageScreen(
 
         Button(
             onClick = {
-                if (messageContent.isNotBlank()) {
-                    errorMessage = null // Reset error message
-                    coroutineScope.launch {
-                        try {
-                            messageRepository.sendMessage(adId, receiverId, messageContent)
-                            messageContent = "" // Clear input
-                        } catch (e: Exception) {
-                            errorMessage = "Error sending message: ${e.message}"
-                        }
-                    }
-                } else {
-                    errorMessage = "Message cannot be empty."
-                }
+                messageViewModel.sendMessage(adId, receiverId, messageContent)
+                messageContent = "" // Clear input
             },
             modifier = Modifier.align(Alignment.End)
         ) {

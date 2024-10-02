@@ -20,6 +20,7 @@ import com.example.mycompose.ui.CompleteProfileScreen
 import com.example.mycompose.view.screens.CreateAdScreen
 import com.example.mycompose.view.screens.MessageBoxScreen
 import com.example.mycompose.view.screens.MessageScreen
+import com.example.mycompose.viewmodel.MessageViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 
 @Composable
@@ -81,9 +82,7 @@ fun Navigation(
                 adId = adId,
                 senderId = senderId,
                 receiverId = receiverId,
-                messageRepository = MessageRepository(),
-                profileRepository = ProfileRepository(),
-                adTitle = adTitle // Now passing the required parameter
+                messageViewModel =MessageViewModel(messageRepository = MessageRepository(), profileRepository = ProfileRepository())
             )
         }
 

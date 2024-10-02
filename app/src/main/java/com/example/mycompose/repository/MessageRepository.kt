@@ -12,42 +12,23 @@ import kotlinx.coroutines.tasks.await
 class MessageRepository {
     private val firestore = FirebaseFirestore.getInstance()
 
-    // Mesaj gönderme metodu
+    // Send message method
     suspend fun sendMessage(adId: String, receiverId: String, content: String) {
         val senderId = getCurrentUserId() ?: return
-        val roomId = createRoomId(adId, senderId, receiverId) // Oda ID'sini oluştur
+        val roomId = createRoomId(adId, senderId, receiverId)
 
-        // Yeni mesaj oluştur
-        val message = MessageModel(
-            senderId = senderId,
-            receiverId = receiverId,
-            messageContent = content,
-            adId = adId,
-            roomId = roomId
-        )
+        val message = createMessage(senderId, receiverId, content, adId, roomId)
 
         try {
-            // Mesajı özel odanın alt koleksiyonuna ekle
-            firestore.collection("messages")
-                .document(roomId)
-                .collection("messages")
-                .add(message)
-                .await()
+            // Add message to the messages collection
+            addMessageToRoom(roomId, message)
 
-            // Oda dökümanını son mesaj ve zaman damgasıyla güncelle veya oluştur
-            val roomData = mapOf(
-                "lastMessage" to content,
-                "lastMessageTimestamp" to System.currentTimeMillis()
-            )
+            // Update room document with the last message details
+            updateRoomWithLastMessage(roomId, content)
 
-            firestore.collection("messages")
-                .document(roomId)
-                .set(roomData, SetOptions.merge()) // Belge yoksa oluştur, varsa güncelle
-                .await()
-
-            Log.d("MessageRepository", "Mesaj başarıyla gönderildi: $content")
+            Log.d("MessageRepository", "Message sent successfully: $content")
         } catch (e: Exception) {
-            Log.e("MessageRepository", "Mesaj gönderilirken hata oluştu: ${e.message}")
+            Log.e("MessageRepository", "Error sending message: ${e.message}")
         }
     }
 
@@ -78,75 +59,116 @@ class MessageRepository {
             }
     }
 
-    // Kullanıcıyla ilgili tüm odalardan son mesajları al
+    // Get rooms and last message data for current user
     suspend fun getRoomsForCurrentUser(): List<Pair<MessageModel, UserProfile>> {
         val currentUserId = getCurrentUserId() ?: return emptyList()
-        val rooms = mutableMapOf<String, Pair<MessageModel, UserProfile>>() // Oda ID'sine göre benzersiz odalar
+        val rooms = mutableMapOf<String, Pair<MessageModel, UserProfile>>()
 
         try {
-            // Kullanıcının gönderdiği veya aldığı mesajları al
-            val messageSnapshots = firestore.collectionGroup("messages")
-                .whereEqualTo("senderId", currentUserId)
-                .get()
-                .await()
-                .documents +
-                    firestore.collectionGroup("messages")
-                        .whereEqualTo("receiverId", currentUserId)
-                        .get()
-                        .await()
-                        .documents
+            val messageSnapshots = getMessagesForUser(currentUserId)
 
-            Log.d("MessageRepository", "Toplam mesaj sayısı: ${messageSnapshots.size}")
+            messageSnapshots.forEach { doc ->
+                val message = doc.toObject(MessageModel::class.java) ?: return@forEach
+                val roomId = message.roomId ?: return@forEach
 
-            // Her mesaj için odaları belirle
-            for (doc in messageSnapshots) {
-                val message = doc.toObject(MessageModel::class.java) ?: continue
-                val roomId = message.roomId ?: continue
-
-                // Eğer oda daha önce eklenmemişse
                 if (!rooms.containsKey(roomId)) {
-                    // Alıcıyı al
                     val receiverId = if (message.senderId == currentUserId) message.receiverId else message.senderId
-                    val receiverProfile = firestore.collection("users")
-                        .document(receiverId)
-                        .get()
-                        .await()
-                        .toObject(UserProfile::class.java)
+                    val receiverProfile = getUserProfile(receiverId)
 
-                    if (receiverProfile != null) {
-                        rooms[roomId] = Pair(message, receiverProfile) // Oda ve alıcı profili ekle
-                        Log.d("MessageRepository", "Oda eklendi: $roomId, Alıcı: $receiverId")
-                    } else {
-                        Log.e("MessageRepository", "Alıcı profili bulunamadı: $receiverId")
-                    }
+                    receiverProfile?.let {
+                        rooms[roomId] = Pair(message, it)
+                        Log.d("MessageRepository", "Room added: $roomId, Receiver: $receiverId")
+                    } ?: Log.e("MessageRepository", "Receiver profile not found: $receiverId")
                 } else {
-                    // Oda zaten mevcutsa, sadece son mesajı güncelle
                     val existingMessage = rooms[roomId]?.first
                     if (existingMessage == null || message.timestamp > existingMessage.timestamp) {
-                        rooms[roomId] = Pair(message, rooms[roomId]!!.second) // Son mesajı güncelle
+                        rooms[roomId] = Pair(message, rooms[roomId]!!.second)
                     }
                 }
             }
         } catch (e: Exception) {
-            Log.e("MessageRepository", "Odalar getirilirken hata oluştu: ${e.message}")
+            Log.e("MessageRepository", "Error fetching rooms: ${e.message}")
         }
 
-        return rooms.values.toList() // Benzersiz odaları döner
+        return rooms.values.toList()
     }
 
-    // Şu anki kullanıcı ID'sini alma
+    // Get current user's ID
     private fun getCurrentUserId(): String? {
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser == null) {
-            Log.e("MessageRepository", "Kullanıcı giriş yapmamış!")
+        return FirebaseAuth.getInstance().currentUser?.uid.also {
+            if (it == null) {
+                Log.e("MessageRepository", "User is not logged in!")
+            }
         }
-        return currentUser?.uid // Eğer kullanıcı giriş yapmamışsa null döner
     }
 
+    // Create unique room ID
     private fun createRoomId(adId: String, userId1: String, userId2: String): String {
-        // Sort user IDs to maintain consistency
         val sortedUserIds = listOf(userId1, userId2).sorted()
         return "${adId}-${sortedUserIds[0]}-${sortedUserIds[1]}"
     }
 
+    // Create a message model
+    private fun createMessage(senderId: String, receiverId: String, content: String, adId: String, roomId: String): MessageModel {
+        return MessageModel(
+            senderId = senderId,
+            receiverId = receiverId,
+            messageContent = content,
+            adId = adId,
+            roomId = roomId
+        )
+    }
+
+    // Add message to Firestore
+    private suspend fun addMessageToRoom(roomId: String, message: MessageModel) {
+        firestore.collection("messages")
+            .document(roomId)
+            .collection("messages")
+            .add(message)
+            .await()
+    }
+
+    // Update the room document with the last message and timestamp
+    private suspend fun updateRoomWithLastMessage(roomId: String, lastMessage: String) {
+        val roomData = mapOf(
+            "lastMessage" to lastMessage,
+            "lastMessageTimestamp" to System.currentTimeMillis()
+        )
+
+        firestore.collection("messages")
+            .document(roomId)
+            .set(roomData, SetOptions.merge())
+            .await()
+    }
+
+    // Get all messages for a user
+    private suspend fun getMessagesForUser(currentUserId: String): List<com.google.firebase.firestore.DocumentSnapshot> {
+        val senderMessages = firestore.collectionGroup("messages")
+            .whereEqualTo("senderId", currentUserId)
+            .get()
+            .await()
+            .documents
+
+        val receiverMessages = firestore.collectionGroup("messages")
+            .whereEqualTo("receiverId", currentUserId)
+            .get()
+            .await()
+            .documents
+
+        return senderMessages + receiverMessages
+    }
+
+    // Get user profile for a given user ID
+    private suspend fun getUserProfile(userId: String): UserProfile? {
+        return try {
+            firestore.collection("users")
+                .document(userId)
+                .get()
+                .await()
+                .toObject(UserProfile::class.java)
+        } catch (e: Exception) {
+            Log.e("MessageRepository", "Error fetching user profile for $userId: ${e.message}")
+            null
+        }
+    }
 }
