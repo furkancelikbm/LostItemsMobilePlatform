@@ -1,8 +1,6 @@
 package com.example.mycompose.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mycompose.model.MessageModel

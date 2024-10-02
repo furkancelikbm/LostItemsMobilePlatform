@@ -9,61 +9,32 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import com.example.mycompose.model.MessageModel
-import com.example.mycompose.model.UserProfile
-import com.example.mycompose.repository.MessageRepository
-import com.example.mycompose.repository.ProfileRepository
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.example.mycompose.model.MessageModel
+import com.example.mycompose.model.UserProfile
+import com.example.mycompose.ui.viewmodel.MessageBoxViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun MessageBoxScreen(
     navController: NavController
 ) {
-    val profileRepository = ProfileRepository()
-    val messageRepository = MessageRepository()
-    val (rooms, setRooms) = remember { mutableStateOf<List<Pair<MessageModel, UserProfile>>>(emptyList()) }
-    val (isLoading, setLoading) = remember { mutableStateOf(true) }
-    val (errorMessage, setErrorMessage) = remember { mutableStateOf<String?>(null) }
+    val messageBoxViewModel: MessageBoxViewModel = viewModel()
+    val state by messageBoxViewModel.state.collectAsState()
 
     LaunchedEffect(Unit) {
-        try {
-            setLoading(true)
-            val fetchedRooms = messageRepository.getRoomsForCurrentUser()
-
-            Log.d("MessageBoxScreen", "Fetched rooms: $fetchedRooms")
-
-            val currentUserId = profileRepository.getCurrentUserId()
-
-            val pairedRooms = fetchedRooms.map { room ->
-                val receiverId = if (room.first.senderId == currentUserId) {
-                    room.first.receiverId
-                } else {
-                    room.first.senderId
-                }
-
-                val userProfile = profileRepository.getUserProfileByAdUserId(receiverId)
-
-                Pair(room.first, userProfile)
-            }
-
-            setRooms(pairedRooms)
-        } catch (e: Exception) {
-            setErrorMessage(e.message)
-            Log.e("MessageBoxScreen", "Error fetching rooms: ${e.message}")
-        } finally {
-            setLoading(false)
-        }
+        messageBoxViewModel.loadMessages()
     }
 
     MessageBoxContent(
-        rooms = rooms,
-        isLoading = isLoading,
-        errorMessage = errorMessage,
+        rooms = state.rooms,
+        isLoading = state.isLoading,
+        errorMessage = state.errorMessage,
         navController = navController
     )
 }
@@ -89,7 +60,7 @@ fun MessageBoxContent(
                 modifier = Modifier.padding(16.dp)
             ) {
                 items(rooms) { (message, profile) ->
-                    MessageCard(message = message, userProfile = profile, navController = navController, profileRepository = ProfileRepository())
+                    MessageCard(message = message, userProfile = profile, navController = navController)
                 }
             }
         }
@@ -100,23 +71,18 @@ fun MessageBoxContent(
 fun MessageCard(
     message: MessageModel,
     userProfile: UserProfile,
-    navController: NavController,
-    profileRepository: ProfileRepository
+    navController: NavController
 ) {
-    // Create a modifier for the card
     val modifier = Modifier
         .fillMaxWidth()
         .padding(8.dp)
         .background(Color.White, MaterialTheme.shapes.medium)
         .clip(MaterialTheme.shapes.medium)
         .clickable {
-            // Navigate to the message screen with adId, receiverId, and senderId
-            val senderId=profileRepository.getCurrentUserId()
-            navController.navigate("message/${message.adId}/${userProfile.userId}/${senderId}")
-            Log.d("MessageCard", "Ad ID: ${message.adId}, alıcı: ${userProfile.firstName}, gonderici: ${message.senderId}")
-
+            navController.navigate("message/${message.adId}/${userProfile.userId}/${message.senderId}")
+            Log.d("MessageCard", "Navigating to message screen with adId: ${message.adId}")
         }
-        .border(1.dp, Color.LightGray) // Border for the striped effect
+        .border(1.dp, Color.LightGray)
         .padding(16.dp)
 
     Column(modifier = modifier) {
@@ -125,23 +91,23 @@ fun MessageCard(
                 model = userProfile.profilePicture,
                 contentDescription = "Profile Image",
                 modifier = Modifier
-                    .size(60.dp) // Increased size for the profile image
+                    .size(60.dp)
                     .clip(CircleShape)
             )
-            Spacer(modifier = Modifier.width(12.dp)) // Increased spacing
+            Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
                     text = "${userProfile.firstName} ${userProfile.lastName}",
-                    style = MaterialTheme.typography.titleMedium, // Larger text style
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(4.dp)) // Added spacing between texts
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = message.messageContent,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )
-                Spacer(modifier = Modifier.height(4.dp)) // Added spacing
+                Spacer(modifier = Modifier.height(4.dp))
                 val formattedTimestamp = formatTimestamp(message.timestamp)
                 Text(
                     text = "Last message: $formattedTimestamp",
@@ -153,8 +119,6 @@ fun MessageCard(
     }
 }
 
-
-// Helper function to format timestamp
 fun formatTimestamp(timestamp: Long): String {
     val currentDate = System.currentTimeMillis()
     val differenceInMillis = currentDate - timestamp
