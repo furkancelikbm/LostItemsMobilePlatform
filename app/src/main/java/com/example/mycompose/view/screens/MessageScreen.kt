@@ -150,6 +150,7 @@ fun MessageItem(
                 contentDescription = "Sender Profile Picture",
                 modifier = Modifier.size(32.dp)
             )
+            Spacer(modifier = Modifier.width(8.dp))
         }
     }
 }
