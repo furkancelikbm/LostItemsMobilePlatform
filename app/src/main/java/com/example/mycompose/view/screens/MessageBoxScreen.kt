@@ -19,6 +19,7 @@ import com.example.mycompose.model.MessageModel
 import com.example.mycompose.model.UserProfile
 import com.example.mycompose.ui.viewmodel.MessageBoxViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mycompose.repository.ProfileRepository
 
 @Composable
 fun MessageBoxScreen(
@@ -60,7 +61,7 @@ fun MessageBoxContent(
                 modifier = Modifier.padding(16.dp)
             ) {
                 items(rooms) { (message, profile) ->
-                    MessageCard(message = message, userProfile = profile, navController = navController)
+                    MessageCard(message = message, userProfile = profile, navController = navController, profileRepository = ProfileRepository())
                 }
             }
         }
@@ -71,7 +72,8 @@ fun MessageBoxContent(
 fun MessageCard(
     message: MessageModel,
     userProfile: UserProfile,
-    navController: NavController
+    navController: NavController,
+    profileRepository: ProfileRepository
 ) {
     val modifier = Modifier
         .fillMaxWidth()
@@ -79,8 +81,8 @@ fun MessageCard(
         .background(Color.White, MaterialTheme.shapes.medium)
         .clip(MaterialTheme.shapes.medium)
         .clickable {
-            navController.navigate("message/${message.adId}/${userProfile.userId}/${message.senderId}")
-            Log.d("MessageCard", "Navigating to message screen with adId: ${message.adId}")
+            navController.navigate("message/${message.adId}/${userProfile.userId}/${profileRepository.getCurrentUserId()}")
+            Log.d("MessageCard", "Navigating to message screen with adId: ${message.adId}, alici: ${userProfile.userId} gonderici :${profileRepository.getCurrentUserId()}")
         }
         .border(1.dp, Color.LightGray)
         .padding(16.dp)

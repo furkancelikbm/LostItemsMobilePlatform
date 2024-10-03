@@ -1,5 +1,6 @@
 package com.example.mycompose.view.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,7 +36,7 @@ fun MessageScreen(
     // Fetch chat data when the screen is launched
     LaunchedEffect(adId) {
         messageViewModel.fetchChatData(adId, receiverId, senderId)
-    }
+        Log.d("MessageScreen", "SenderId: $senderName")    }
 
     Column(
         modifier = Modifier
