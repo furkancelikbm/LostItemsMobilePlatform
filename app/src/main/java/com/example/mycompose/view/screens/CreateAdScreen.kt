@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +46,19 @@ fun CreateAdScreen(
     ) { uri: Uri? ->
         uri?.let { viewModel.addImage(it) }
     }
+
+    val selectedCategory =viewModel.selectedCategory.value
+
+    // Observe for selected category result
+    val backStackEntry = navController.currentBackStackEntry
+    val savedStateHandle = backStackEntry?.savedStateHandle
+    savedStateHandle?.getLiveData<String>("selectedCategory")?.observeAsState()!!.value?.let { category ->
+        category?.let {
+            viewModel.selectedCategory.value = it
+        }
+    }
+
+
 
     Box(
         modifier = Modifier
@@ -97,6 +111,25 @@ fun CreateAdScreen(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Add a button to choose a category
+            AdButton(
+                onClick = {
+                    navController.navigate("ChooseCategoryScreen")
+                },
+                text = "Choose a Category"
+            )
+
+            // Display selected category
+            if (selectedCategory.isNotEmpty()) {
+                Text(
+                    text = "Selected Category: ${selectedCategory}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
 
             AdButton(
                 onClick = { galleryLauncher.launch(arrayOf("image/*")) },

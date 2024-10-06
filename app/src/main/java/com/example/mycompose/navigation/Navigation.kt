@@ -17,6 +17,7 @@ import com.example.mycompose.view.screens.Profile
 import com.example.mycompose.view.screens.ProfileApp
 import com.example.mycompose.view.screens.Register
 import com.example.mycompose.ui.CompleteProfileScreen
+import com.example.mycompose.view.screens.ChooseCategoryScreen
 import com.example.mycompose.view.screens.CreateAdScreen
 import com.example.mycompose.view.screens.MessageBoxScreen
 import com.example.mycompose.view.screens.MessageScreen
@@ -84,6 +85,10 @@ fun Navigation(
                 receiverId = receiverId,
                 messageViewModel =MessageViewModel(messageRepository = MessageRepository(), profileRepository = ProfileRepository())
             )
+        }
+
+        composable("ChooseCategoryScreen") {
+            ChooseCategoryScreen(navController)
         }
 
 
