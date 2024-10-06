@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,8 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -112,21 +116,28 @@ fun CreateAdScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Add a button to choose a category
-            AdButton(
-                onClick = {
-                    navController.navigate("ChooseCategoryScreen")
+            OutlinedTextField(
+                value = if (selectedCategory.isNotEmpty()) selectedCategory else "Choose a Category",
+                onValueChange = {},
+                readOnly = true, // Make the field read-only
+                label = { Text(
+                    "Category",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { navController.navigate("ChooseCategoryScreen") }, // Clickable on the entire field
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = "Arrow"
+                    )
                 },
-                text = "Choose a Category"
+                enabled = false // This ensures it looks like a static input but is still clickable
             )
 
-            // Display selected category
-            if (selectedCategory.isNotEmpty()) {
-                Text(
-                    text = "Selected Category: ${selectedCategory}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 

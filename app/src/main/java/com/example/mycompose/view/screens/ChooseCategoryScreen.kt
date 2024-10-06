@@ -35,8 +35,6 @@ fun ChooseCategoryScreen(
                         .padding(8.dp)
                         .clickable {
                             viewModel.selectedCategory.value = category // Set selected category
-                            Log.d("ChooseCategoryScreen", "Category selected: $category") // Log selected category
-                            Log.d("ChooseCategoryScreen", "Category selected: ${viewModel.selectedCategory.value}") // Log selected category
                             navController.previousBackStackEntry?.savedStateHandle?.set("selectedCategory", category)
                             navController.popBackStack()
                         },

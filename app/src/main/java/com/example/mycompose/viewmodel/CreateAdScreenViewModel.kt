@@ -109,7 +109,8 @@ class CreateAdScreenViewModel(
                             userId = profile.userId,
                             imageUrls = imageUrls,
                             location = locationInputFieldViewModel.pickUp.text,
-                            locationId = locationId.value
+                            locationId = locationId.value,
+                            category = selectedCategory.value
                         )
                         adRepository.addAd(newAd)
 

@@ -8,5 +8,6 @@ data class AdModel(
     val imageUrls: List<String> = listOf(),
     val userId: String = "", // Kullanıcı ID'si
     val locationId: String = "",
-    val timestamp: Long = System.currentTimeMillis() // Store as Long (epoch time)
+    val timestamp: Long = System.currentTimeMillis() ,// Store as Long (epoch time)
+    val category:String=""
 )
