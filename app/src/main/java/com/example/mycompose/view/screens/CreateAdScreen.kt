@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -67,7 +68,9 @@ fun CreateAdScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }) {
                 focusManager.clearFocus()
                 viewModel.locationInputFieldViewModel.checkAndSelectFirstPlace()
             }
@@ -78,6 +81,17 @@ fun CreateAdScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Row(
+                modifier=Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                IconButton(onClick ={navController.popBackStack()} ) {
+                    Icon(
+                        imageVector =Icons.Default.ArrowBack ,
+                        contentDescription = "Back" )
+                }
+            }
+
             Text(text = "Create New Ad", style = MaterialTheme.typography.headlineMedium)
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -155,7 +169,11 @@ fun CreateAdScreen(
                         modifier = Modifier
                             .size(150.dp)
                             .padding(4.dp)
-                            .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                            .border(
+                                2.dp,
+                                MaterialTheme.colorScheme.primary,
+                                RoundedCornerShape(8.dp)
+                            )
                     ) {
                         val painter = rememberImagePainter(uri)
                         Image(painter = painter, contentDescription = null, modifier = Modifier.fillMaxSize())

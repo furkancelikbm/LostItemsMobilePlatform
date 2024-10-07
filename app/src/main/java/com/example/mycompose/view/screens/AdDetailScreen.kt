@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,8 +56,20 @@ fun AdDetailScreen(
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            val pagerState = rememberPagerState()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                IconButton(onClick = {navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack ,
+                        contentDescription = "Back")
+                }
+            }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val pagerState = rememberPagerState()
             // Horizontal image pager
             HorizontalPager(
                 count = ad!!.imageUrls.size,

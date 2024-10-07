@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,7 +24,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,6 +39,8 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
 import com.example.mycompose.model.PhotoItem
 import com.example.mycompose.viewmodel.HomeViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import dagger.hilt.android.lifecycle.HiltViewModel
 
 
@@ -42,6 +49,16 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 fun Home(navController: NavController) {
     val viewModel:HomeViewModel= hiltViewModel()
     val photoItems = viewModel.photoItems.collectAsState(initial = emptyList())
+    // Assuming you have a way to trigger refresh in your ViewModel
+    val isRefreshing = viewModel.isRefreshing.collectAsState(initial = false)
+
+    SwipeRefresh(
+
+        state = rememberSwipeRefreshState(isRefreshing.value),
+        onRefresh = { viewModel.refreshPhotos()}) {
+
+        Spacer(modifier = Modifier.height(1.dp))
+
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -52,11 +69,14 @@ fun Home(navController: NavController) {
             items(photoItems.value) { ad ->
                 val imageUrl = ad.imageUrls.firstOrNull() ?: ""
                 val title = ad.title
-                PhotoItemView(photoItem = PhotoItem(imageUrl, title=ad.title,id=ad.id)){
+                PhotoItemView(photoItem = PhotoItem(imageUrl, title=title,id=ad.id)){
                     navController.navigate("adDetail/${ad.id}")
                 }
             }
         }
+
+    }
+
 
 }
 

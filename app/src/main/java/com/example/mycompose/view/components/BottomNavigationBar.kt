@@ -16,6 +16,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -36,6 +38,9 @@ fun BottomNavigationBar(navController: NavController, viewModel: NavigationViewM
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: ""
 
+    //remember the last time home was clicked
+    val lastHomeClickTime = remember { mutableStateOf(0L) }
+
     NavigationBar {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
@@ -48,6 +53,17 @@ fun BottomNavigationBar(navController: NavController, viewModel: NavigationViewM
                 label = { Text(text = item.title) },
                 selected = currentRoute == item.title,
                 onClick = {
+                    //Handle Home double-click
+                    if (item.title=="Home"){
+                        val currentTime=System.currentTimeMillis()
+                        if(currentTime-lastHomeClickTime.value<500){
+                            //Detected a double-click, refresh Home screen
+                            viewModel.onHomeDoubleClick(navController)
+                        }
+                        lastHomeClickTime.value=currentTime
+                    }
+
+                    //Navigate to the selected item
                     viewModel.onNavigationItemSelected(index)
                     navController.navigate(item.title) {
                         // Prevent multiple copies of the same destination

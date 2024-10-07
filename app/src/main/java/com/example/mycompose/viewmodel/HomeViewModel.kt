@@ -18,18 +18,30 @@ class HomeViewModel @Inject constructor(
     private val _photoItems = MutableStateFlow<List<AdModel>>(emptyList())
     val photoItems = _photoItems.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
     init {
         fetchAds()
     }
 
     private fun fetchAds() {
         viewModelScope.launch {
+            _isRefreshing.value=true
             try {
                 val ads = adRepository.getAds()
                 _photoItems.value = ads
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Error fetching ads", e)
             }
+            finally {
+                _isRefreshing.value=false //set loading to false
+            }
         }
+    }
+
+    // Reload ads
+    fun refreshPhotos() {
+        fetchAds() // Call fetchAds to refresh the data
     }
 }
