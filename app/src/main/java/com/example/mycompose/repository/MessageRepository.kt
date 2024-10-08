@@ -32,18 +32,18 @@ class MessageRepository {
         }
     }
 
-    // Mesajları gerçek zamanlı olarak alma metodu
+    // Get messages in real-time
     fun getMessagesRealtime(adId: String, receiverId: String, onMessagesChanged: (List<MessageModel>) -> Unit) {
         val senderId = getCurrentUserId() ?: return
-        val roomId = createRoomId(adId, senderId, receiverId) // Oda ID'sini oluştur
+        val roomId = createRoomId(adId, senderId, receiverId)
 
         firestore.collection("messages")
-            .document(roomId) // Oda ID'si
-            .collection("messages") // Mesajlar alt koleksiyonu
-            .orderBy("timestamp", Query.Direction.DESCENDING) // Zaman damgasına göre sıralama
+            .document(roomId)
+            .collection("messages")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    Log.w("MessageRepository", "Mesajlar dinlenirken hata oluştu.", e)
+                    Log.w("MessageRepository", "Error listening for messages.", e)
                     return@addSnapshotListener
                 }
 
@@ -52,20 +52,24 @@ class MessageRepository {
                         doc.toObject(MessageModel::class.java)
                     }
                     onMessagesChanged(messageList)
-                    Log.d("MessageRepository", "Mesajlar başarıyla alındı: $messageList")
+                    Log.d("MessageRepository", "Messages retrieved: $messageList")
                 } else {
-                    Log.d("MessageRepository", "Mesaj bulunamadı.")
+                    Log.d("MessageRepository", "No messages found.")
                 }
             }
     }
 
     // Get rooms and last message data for current user
-    suspend fun getRoomsForCurrentUser(): List<Pair<MessageModel, UserProfile>> {
+    suspend fun getRoomsForCurrentUser(
+        pageSize: Int = 50,
+        lastVisibleMessage: MessageModel? = null
+    ): List<Pair<MessageModel, UserProfile>> {
+
         val currentUserId = getCurrentUserId() ?: return emptyList()
         val rooms = mutableMapOf<String, Pair<MessageModel, UserProfile>>()
 
         try {
-            val messageSnapshots = getMessagesForUser(currentUserId)
+            val messageSnapshots = getMessagesForUser(currentUserId, pageSize, lastVisibleMessage)
 
             messageSnapshots.forEach { doc ->
                 val message = doc.toObject(MessageModel::class.java) ?: return@forEach
@@ -142,20 +146,22 @@ class MessageRepository {
     }
 
     // Get all messages for a user
-    private suspend fun getMessagesForUser(currentUserId: String): List<com.google.firebase.firestore.DocumentSnapshot> {
-        val senderMessages = firestore.collectionGroup("messages")
-            .whereEqualTo("senderId", currentUserId)
-            .get()
-            .await()
-            .documents
+    private suspend fun getMessagesForUser(
+        currentUserId: String,
+        pageSize: Int,
+        lastVisibleMessage: MessageModel?
+    ): List<com.google.firebase.firestore.DocumentSnapshot> {
 
-        val receiverMessages = firestore.collectionGroup("messages")
+        val query = firestore.collectionGroup("messages")
             .whereEqualTo("receiverId", currentUserId)
-            .get()
-            .await()
-            .documents
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(pageSize.toLong())
 
-        return senderMessages + receiverMessages
+        lastVisibleMessage?.let {
+            query.startAfter(it.timestamp)
+        }
+
+        return query.get().await().documents
     }
 
     // Get user profile for a given user ID
