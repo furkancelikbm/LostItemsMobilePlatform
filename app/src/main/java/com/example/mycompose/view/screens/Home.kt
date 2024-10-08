@@ -23,9 +23,14 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,29 +57,49 @@ fun Home(navController: NavController) {
     // Assuming you have a way to trigger refresh in your ViewModel
     val isRefreshing = viewModel.isRefreshing.collectAsState(initial = false)
 
-    SwipeRefresh(
+    var searchQuery by remember { mutableStateOf("") }
 
-        state = rememberSwipeRefreshState(isRefreshing.value),
-        onRefresh = { viewModel.refreshPhotos()}) {
+    // Filter the photo items based on the search query
+    val filteredItems = photoItems.value.filter {
+        it.title.contains(searchQuery, ignoreCase = true)
+    }
 
-        Spacer(modifier = Modifier.height(1.dp))
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Search Bar
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Search...") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        )
+
+        SwipeRefresh(
+
+            state = rememberSwipeRefreshState(isRefreshing.value),
+            onRefresh = { viewModel.refreshPhotos() }) {
+
+            Spacer(modifier = Modifier.height(1.dp))
 
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(photoItems.value) { ad ->
-                val imageUrl = ad.imageUrls.firstOrNull() ?: ""
-                val title = ad.title
-                PhotoItemView(photoItem = PhotoItem(imageUrl, title=title,id=ad.id)){
-                    navController.navigate("adDetail/${ad.id}")
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(filteredItems) { ad ->
+                    val imageUrl = ad.imageUrls.firstOrNull() ?: ""
+                    val title = ad.title
+                    PhotoItemView(photoItem = PhotoItem(imageUrl, title = title, id = ad.id)) {
+                        navController.navigate("adDetail/${ad.id}")
+                    }
                 }
             }
-        }
 
+        }
     }
 
 
