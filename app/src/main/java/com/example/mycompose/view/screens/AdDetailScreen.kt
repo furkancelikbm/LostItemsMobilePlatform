@@ -65,6 +65,7 @@ fun AdDetailScreen(
                         imageVector = Icons.Default.ArrowBack ,
                         contentDescription = "Back")
                 }
+
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -128,6 +129,14 @@ fun AdDetailScreen(
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 
+            // Ad date
+            Text(
+                text = "Posted on: ${ad!!.adDate}", // Add a formatted date here
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
             // Location
             Text(
                 text = "Location: ${ad!!.location}",
@@ -144,6 +153,7 @@ fun AdDetailScreen(
             )
 
             Spacer(modifier = Modifier.height(15.dp))
+
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -170,8 +180,11 @@ fun AdDetailScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+
             }
             Spacer(modifier = Modifier.weight(1f)) // Pushes the button to the bottom
+
+
             // Get current user ID
             val receiverId = userProfile!!.userId
             val senderId = profileRepository.getCurrentUserId()
@@ -192,6 +205,7 @@ fun AdDetailScreen(
                     Text(text = "Send Message", style = MaterialTheme.typography.bodyLarge, color = Color.White)
                 }
             }
+
 
             // Fullscreen image dialog
             if (selectedImage != null) {

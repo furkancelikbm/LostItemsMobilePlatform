@@ -55,7 +55,6 @@ fun MessageScreen(
                     contentDescription = "Back")
             }
         }
-
         // Display ad title and user names
         Text(text = adId, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
         Text(text = "Chat with $receiverName", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 16.dp))

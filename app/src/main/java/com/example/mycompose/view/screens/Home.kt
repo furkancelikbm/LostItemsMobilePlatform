@@ -1,44 +1,27 @@
 package com.example.mycompose.view.screens
 
+import android.app.DatePickerDialog
+import android.util.Log
+import android.widget.DatePicker
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
@@ -46,43 +29,120 @@ import com.example.mycompose.model.PhotoItem
 import com.example.mycompose.viewmodel.HomeViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import dagger.hilt.android.lifecycle.HiltViewModel
-
-
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun Home(navController: NavController) {
-    val viewModel:HomeViewModel= hiltViewModel()
+    val viewModel: HomeViewModel = hiltViewModel()
     val photoItems = viewModel.photoItems.collectAsState(initial = emptyList())
-    // Assuming you have a way to trigger refresh in your ViewModel
     val isRefreshing = viewModel.isRefreshing.collectAsState(initial = false)
 
     var searchQuery by remember { mutableStateOf("") }
+    var selectedLocation by remember { mutableStateOf("All Locations") }
+    var selectedDate by remember { mutableStateOf("") }
+    var isLocationDropdownExpanded by remember { mutableStateOf(false) }
 
-    // Filter the photo items based on the search query
+    val context = LocalContext.current
+
+    // Filter the photo items based on search query, location, and date
     val filteredItems = photoItems.value.filter {
-        it.title.contains(searchQuery, ignoreCase = true)
+        it.title.contains(searchQuery, ignoreCase = true) &&
+                (selectedLocation == "All Locations" || it.location == selectedLocation) &&
+                (selectedDate.isEmpty() || it.adDate== selectedDate)
     }
 
-
     Column(modifier = Modifier.fillMaxSize()) {
-        // Search Bar
-        TextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = { Text("Search...") },
+
+        // Search Bar Row
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
-        )
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Search Bar
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Search...") },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
+                trailingIcon = {
+                    IconButton(onClick = { /* Handle Filter Icon Click */ }) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "Filter"
+                        )
+                    }
+                }
+            )
+        }
 
+        // Filter Options Row (Location and Date)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Location Dropdown
+            Box {
+                Text(
+                    text = selectedLocation,
+                    modifier = Modifier
+                        .clickable { isLocationDropdownExpanded = true }
+                        .padding(8.dp)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clip(RoundedCornerShape(8.dp))
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                DropdownMenu(
+                    expanded = isLocationDropdownExpanded,
+                    onDismissRequest = { isLocationDropdownExpanded = false }
+                ) {
+                    val locations = listOf("All Locations", "City A", "City B", "City C")
+                    locations.forEach { location ->
+                        DropdownMenuItem(
+                            text = { Text(location) },
+                            onClick = {
+                                selectedLocation = location
+                                isLocationDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Date Picker
+            val calendar = Calendar.getInstance()
+            val datePickerDialog = DatePickerDialog(
+                context,
+                { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+                    selectedDate =String.format("%02d/%02d/%02d", dayOfMonth, month +1 , year %100)
+                    Log.d("HomeScreen", "Selected date: $selectedDate") // Log the selected date
+                }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)
+            )
+
+            Text(
+                text = if (selectedDate.isEmpty()) "Select Date" else selectedDate,
+                modifier = Modifier
+                    .clickable { datePickerDialog.show() }
+                    .padding(8.dp)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clip(RoundedCornerShape(8.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+
+        // SwipeRefresh with LazyVerticalGrid for displaying photos
         SwipeRefresh(
-
             state = rememberSwipeRefreshState(isRefreshing.value),
             onRefresh = { viewModel.refreshPhotos() }) {
 
             Spacer(modifier = Modifier.height(1.dp))
-
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -98,15 +158,12 @@ fun Home(navController: NavController) {
                     }
                 }
             }
-
         }
     }
-
-
 }
 
 @Composable
-fun PhotoItemView(photoItem: PhotoItem, onClick:()-> Unit) {
+fun PhotoItemView(photoItem: PhotoItem, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),

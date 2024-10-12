@@ -6,6 +6,8 @@ import com.example.mycompose.model.AdModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Locale
 import javax.inject.Inject
 
 class AdRepository @Inject constructor(){
@@ -15,9 +17,14 @@ class AdRepository @Inject constructor(){
 
     suspend fun addAd(ad: AdModel) {
         try {
-            firestore.collection("ads").document().set(ad).await()
+            val dateFormat=SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+            val formattedDate=dateFormat.format(System.currentTimeMillis())
+
+            val adWithDate =ad.copy(adDate = formattedDate)
+            firestore.collection("ads").document().set(adWithDate).await()
         } catch (e: Exception) {
             // Hata durumu: loglama veya kullanıcıya bildirme
+            Log.e("AdRepository", "Error adding ad: ${e.message}")
             throw e
         }
     }
@@ -35,7 +42,8 @@ class AdRepository @Inject constructor(){
                 imageUrls = data["imageUrls"] as? List<String> ?: listOf(),
                 userId = data["userId"] as? String ?: "",
                 locationId = data["locationId"] as? String ?: "",
-                timestamp = (data["timestamp"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L
+                timestamp = (data["timestamp"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L,
+                adDate = data["adDate"] as? String?: "" //Retrieve adDate
             )
         }
     }
@@ -65,7 +73,8 @@ class AdRepository @Inject constructor(){
             imageUrls = data["imageUrls"] as? List<String> ?: listOf(),
             userId = data["userId"] as? String ?: "",
             locationId = data["locationId"] as? String ?: "",
-            timestamp = (data["timestamp"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L
+            timestamp = (data["timestamp"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L,
+            adDate = data["adDate"] as? String ?: "" // Retrieve adDate
         )
     }
 

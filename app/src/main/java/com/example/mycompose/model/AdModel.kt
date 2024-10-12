@@ -9,5 +9,7 @@ data class AdModel(
     val userId: String = "", // Kullanıcı ID'si
     val locationId: String = "",
     val timestamp: Long = System.currentTimeMillis() ,// Store as Long (epoch time)
-    val category:String=""
+    val category:String="",
+    val adDate: String = "" // Add adDate property
+
 )
