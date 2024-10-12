@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,21 +25,38 @@ import com.example.mycompose.repository.ProfileRepository
 
 @Composable
 fun MessageBoxScreen(
-    navController: NavController
-) {
+    navController: NavController)
+{
     val messageBoxViewModel: MessageBoxViewModel = viewModel()
     val state by messageBoxViewModel.state.collectAsState()
 
     LaunchedEffect(Unit) {
         messageBoxViewModel.loadMessages()
     }
-
-    MessageBoxContent(
-        rooms = state.rooms,
-        isLoading = state.isLoading,
-        errorMessage = state.errorMessage,
-        navController = navController
+    Column (
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxSize()
     )
+    {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            IconButton(onClick = {navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack ,
+                    contentDescription = "Back")
+            }
+        }
+        MessageBoxContent(
+            rooms = state.rooms,
+            isLoading = state.isLoading,
+            errorMessage = state.errorMessage,
+            navController = navController
+        )
+    }
+
 }
 
 @Composable
@@ -82,7 +101,10 @@ fun MessageCard(
         .clip(MaterialTheme.shapes.medium)
         .clickable {
             navController.navigate("message/${message.adId}/${userProfile.userId}/${profileRepository.getCurrentUserId()}")
-            Log.d("MessageCard", "Navigating to message screen with adId: ${message.adId}, alici: ${userProfile.userId} gonderici :${profileRepository.getCurrentUserId()}")
+            Log.d(
+                "MessageCard",
+                "Navigating to message screen with adId: ${message.adId}, alici: ${userProfile.userId} gonderici :${profileRepository.getCurrentUserId()}"
+            )
         }
         .border(1.dp, Color.LightGray)
         .padding(16.dp)

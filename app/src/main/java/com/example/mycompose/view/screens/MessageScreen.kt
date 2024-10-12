@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,6 +45,17 @@ fun MessageScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            IconButton(onClick = {navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack ,
+                    contentDescription = "Back")
+            }
+        }
+
         // Display ad title and user names
         Text(text = adId, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
         Text(text = "Chat with $receiverName", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 16.dp))
