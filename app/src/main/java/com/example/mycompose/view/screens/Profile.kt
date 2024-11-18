@@ -21,7 +21,7 @@ fun Profile(navController: NavController) {
         verticalArrangement = Arrangement.Center, // Center vertically
         horizontalAlignment = Alignment.CenterHorizontally // Center horizontally
     ) {
-        Text(text = "napiyon lan")
+        Text(text = "Bakim asamasinda")
     }
 }
 
