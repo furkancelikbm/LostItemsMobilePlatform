@@ -2,6 +2,7 @@ package com.example.mycompose.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.mycompose.model.LocationCities
 import com.example.mycompose.model.LocationStates
 import com.google.firebase.database.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,8 +13,13 @@ class LocationSelectionViewModel : ViewModel() {
     private val _stateList = MutableStateFlow<List<LocationStates>>(emptyList())
     val stateList: StateFlow<List<LocationStates>> = _stateList
 
+    private val _citiesList=MutableStateFlow<List<LocationCities>>(emptyList())
+    val citiesList:StateFlow<List<LocationCities>> =_citiesList
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+
 
     init {
         fetchDataFromFirebase()
@@ -84,4 +90,59 @@ class LocationSelectionViewModel : ViewModel() {
             _isLoading.value = false
         }
     }
+}
+
+fun fetchCitiesFromFirebase(
+    stateCode: String,
+    onSuccess: (List<LocationCities>) -> Unit,
+    onError: (String) -> Unit
+) {
+    val database = FirebaseDatabase.getInstance("https://mycompose-60672-default-rtdb.europe-west1.firebasedatabase.app/")
+    val ref = database.getReference("cities").orderByChild("state_code").equalTo(stateCode)
+
+    ref.addListenerForSingleValueEvent(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            val cities = snapshot.children.mapNotNull { citySnapshot ->
+                try {
+                    val name = citySnapshot.child("name").getValue(String::class.java)
+                    val latitude = citySnapshot.child("latitude").getValue(Double::class.java)
+                    val longitude = citySnapshot.child("longitude").getValue(Double::class.java)
+                    val id = citySnapshot.child("id").getValue(Any::class.java) // Use Any to handle different types
+                    val stateCode = citySnapshot.child("state_code").getValue(String::class.java)
+
+                    // Convert 'id' field to string if it's a Long or any other type
+                    val idString = when (id) {
+                        is Long -> id.toString()  // If the ID is a Long, convert it to String
+                        is String -> id           // If it's already a String, use it directly
+                        else -> null              // If it's neither, return null
+                    }
+
+                    // Create a LocationCities object only if all fields are non-null
+                    if (name != null && latitude != null && longitude != null && idString != null && stateCode != null) {
+                        LocationCities(
+                            name = name,
+                            latitude = latitude,
+                            longitude = longitude,
+                            id = idString,   // Use the converted ID
+                            state_code = stateCode
+                        )
+                    } else {
+                        null
+                    }
+                } catch (e: Exception) {
+                    Log.e("FirebaseError", "Error parsing city data: ${e.message}")
+                    null
+                }
+            }
+
+            // Notify the caller with the fetched cities
+            onSuccess(cities)
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            // Log the error and notify the caller
+            Log.e("FirebaseError", "Error fetching cities: ${error.message}")
+            onError(error.message)
+        }
+    })
 }

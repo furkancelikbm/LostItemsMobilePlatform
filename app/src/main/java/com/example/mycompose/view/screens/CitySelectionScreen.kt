@@ -13,16 +13,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.mycompose.model.LocationCities
+import com.example.mycompose.viewmodel.fetchCitiesFromFirebase
 import com.google.firebase.database.*
 
 @Composable
 fun CitySelectionScreen(
     navController: NavController,
     stateCode: String,
-    stateName:String,
+    stateName: String,
     selectedLocation: MutableState<String>
 ) {
-    var cityList by remember { mutableStateOf<List<String>>(emptyList()) }
+    var cityList by remember { mutableStateOf<List<LocationCities>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     // Fetch cities for the given state code
@@ -54,38 +56,33 @@ fun CitySelectionScreen(
 
         // Display loading screen or city list
         if (isLoading) {
-            LoadingScreen() // You can replace this with your own loading screen composable
+            LoadingScreen() // Replace with your custom loading indicator
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(8.dp)
             ) {
                 items(cityList) { city ->
-                    Text(
-                        text = city,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable {
-                                // Set the selected city and pass it back to the Home screen
-                                selectedLocation.value = city
+                    CityItem(
+                        city = city,
+                        onCityClick = {
+                            selectedLocation.value = city.name
 
-                                // Log the selected city for debugging
-                                Log.d("CitySelection", "City clicked: $city")
+                            // Log the selected city for debugging
+                            Log.d("CitySelection", "City clicked: ${city.name}")
 
-                                // Save selected state and city into savedStateHandle
-                                navController.previousBackStackEntry?.savedStateHandle?.apply {
-                                    set("selectedLocation", city)
-                                    set("selectedState", stateName)
-                                }
+                            // Save selected state and city into savedStateHandle
+                            navController.previousBackStackEntry?.savedStateHandle?.apply {
+                                set("selectedLocation", city.name)
+                                set("selectedState", stateName)
+                            }
 
-                                // Log the savedStateHandle update
-                                Log.d("CitySelection", "Saved state handle updated with: $stateName")
+                            // Log the savedStateHandle update
+                            Log.d("CitySelection", "Saved state handle updated with: $stateName")
 
-                                // Pop back to the Home screen
-                                navController.popBackStack("Home", inclusive = false)
-                            },
-                        style = MaterialTheme.typography.bodyMedium
+                            // Pop back to the Home screen
+                            navController.popBackStack("Home", inclusive = false)
+                        }
                     )
                 }
             }
@@ -93,26 +90,18 @@ fun CitySelectionScreen(
     }
 }
 
-private fun fetchCitiesFromFirebase(
-    stateCode: String,
-    onSuccess: (List<String>) -> Unit,
-    onError: (String) -> Unit
-) {
-    val database = FirebaseDatabase.getInstance("https://mycompose-60672-default-rtdb.europe-west1.firebasedatabase.app/")
-    val ref = database.getReference("cities").orderByChild("state_code").equalTo(stateCode)
-
-    ref.addValueEventListener(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val cities = snapshot.children.mapNotNull { citySnapshot ->
-                citySnapshot.child("name").getValue(String::class.java)
-            }
-            // Notify success with the list of cities
-            onSuccess(cities)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            // Notify error if fetching fails
-            onError(error.message)
-        }
-    })
+@Composable
+fun CityItem(city: LocationCities, onCityClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCityClick() }
+            .padding(8.dp)
+    ) {
+        Text(
+            text = city.name,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+    }
 }
