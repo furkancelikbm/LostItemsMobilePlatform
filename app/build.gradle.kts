@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.webkit)
     implementation(libs.com.google.firebase)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.firebase.database.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

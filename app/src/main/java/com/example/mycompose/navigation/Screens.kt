@@ -8,5 +8,6 @@ enum class Screens {
     CompleteProfileScreen,
     ProfileApp,
     CreateAdScreen,
-    MessageBoxScreen
+    MessageBoxScreen,
+    LocationSelectionScreen
 }

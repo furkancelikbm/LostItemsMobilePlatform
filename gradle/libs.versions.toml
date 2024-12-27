@@ -37,6 +37,7 @@ runtimeLivedataVersion = "1.7.1"
 webkit = "1.11.0"
 coilCompose="2.6.0"
 runtimeLivedata = "1.7.1"
+firebaseDatabaseKtx = "21.0.0"
 
 
 
@@ -95,6 +96,7 @@ play-services-maps = { module = "com.google.android.gms:play-services-maps", ver
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 play-services-maps-v1802 = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMapsVersion" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+firebase-database-ktx = { group = "com.google.firebase", name = "firebase-database-ktx", version.ref = "firebaseDatabaseKtx" }
 
 
 

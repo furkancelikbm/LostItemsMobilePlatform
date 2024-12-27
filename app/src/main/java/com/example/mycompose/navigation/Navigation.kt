@@ -2,6 +2,9 @@ package com.example.mycompose.navigation
 
 import AdDetailScreen
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -18,7 +21,9 @@ import com.example.mycompose.view.screens.ProfileApp
 import com.example.mycompose.view.screens.Register
 import com.example.mycompose.ui.CompleteProfileScreen
 import com.example.mycompose.view.screens.ChooseCategoryScreen
+import com.example.mycompose.view.screens.CitySelectionScreen
 import com.example.mycompose.view.screens.CreateAdScreen
+import com.example.mycompose.view.screens.LocationSelectionScreen
 import com.example.mycompose.view.screens.MessageBoxScreen
 import com.example.mycompose.view.screens.MessageScreen
 import com.example.mycompose.viewmodel.MessageViewModel
@@ -75,9 +80,6 @@ fun Navigation(
             val senderId = backStackEntry.arguments?.getString("senderId") ?: ""
             val receiverId = backStackEntry.arguments?.getString("receiverId") ?: ""
 
-
-
-
             MessageScreen(
                 navController = navController,
                 adId = adId,
@@ -91,8 +93,24 @@ fun Navigation(
             ChooseCategoryScreen(navController)
         }
 
+        composable(Screens.LocationSelectionScreen.name) {
+            LocationSelectionScreen(navController = navController)
+        }
 
+        composable("citySelection/{stateCode}/{stateName}") { backStackEntry ->
+            val stateCode = backStackEntry.arguments?.getString("stateCode")
+            val stateName=backStackEntry.arguments?.getString("stateName")
+            val selectedLocation = remember { mutableStateOf("") } // Initialize as a MutableState
 
+            if (stateCode != null && stateName!=null) {
+                CitySelectionScreen(
+                    navController = navController,
+                    stateCode = stateCode,
+                    stateName=stateName,
+                    selectedLocation = selectedLocation // Pass selectedLocation here
+                )
+            }
+        }
 
 
     }
