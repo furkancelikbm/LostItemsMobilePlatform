@@ -20,7 +20,7 @@ class CreateAdScreenViewModel(
     private val adRepository: AdRepository = AdRepository()
 ) : ViewModel() {
 
-    var adModel = mutableStateOf(AdModel("", "", "", "", listOf(), "", "", System.currentTimeMillis()))
+    var adModel = mutableStateOf(AdModel("", "", "", "",listOf(),"", "", System.currentTimeMillis()))
         private set
 
     var userProfile = mutableStateOf(UserProfile())

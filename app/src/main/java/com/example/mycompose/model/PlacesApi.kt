@@ -1,5 +1,6 @@
 package com.example.mycompose.model
 
+import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.Logging
@@ -28,7 +29,7 @@ class PlacesApi {
         install(ContentNegotiation) {
             json(
                 Json {
-                    ignoreUnknownKeys = true
+                    ignoreUnknownKeys = true  // Ensures that unknown keys are ignored
                     prettyPrint = true
                     isLenient = true
                 }
@@ -68,8 +69,52 @@ class PlacesApi {
         }
     }
 
-    // You may need a way to close the client when the API instance is no longer needed
-    fun closeClient() {
-        client.close()
+    suspend fun fetchPlaceDetailsForPlace(placeId: String): Place? {
+        return try {
+            val response = client.get {
+                url {
+                    protocol = URLProtocol.HTTPS
+                    host = "maps.googleapis.com"
+                    path("maps/api/place/details/json")
+
+                    parameters.append("key", "AIzaSyB7giJpXXt25u0Ald-xIccjGfYUpGoNhHo")  // Gerçek API anahtarınız
+                    parameters.append("placeid", placeId)
+                }
+            }
+
+            // Yanıtı log'la
+            val responseBody = response.bodyAsText()
+//            Log.d("MainActivity", "API Response: $responseBody")
+
+            // JSON çözümleyicisini, bilinmeyen anahtarları yoksayacak şekilde yapılandır
+            val json = Json { ignoreUnknownKeys = true }
+
+            // Yanıtı PlaceDetailsDto'ya çevir
+            val placeDetailsDto = json.decodeFromString<PlaceDetailsDto>(responseBody)
+
+            // Geometry.location'dan lat ve lng değerlerini al
+            placeDetailsDto.result?.let {
+                val latitude = it.geometry.location?.lat  // Yer koordinatının enlemi
+                val longitude = it.geometry.location?.lng  // Yer koordinatının boylamı
+
+                // Koordinatları log'la
+                Log.d("PlaceDetails", "Latitude: $latitude, Longitude: $longitude")
+
+                // Place nesnesini oluştur ve döndür
+                Place(
+                    id = placeId,
+                    name = it.name,
+                    latitude = latitude ?: 0.0,  // Eğer null ise 0.0 olarak ayarlanır
+                    longitude = longitude ?: 0.0,  // Eğer null ise 0.0 olarak ayarlanır
+                    formattedAddress = it.formatted_address
+                )
+            }
+
+        } catch (e: Exception) {
+            // Hata durumunda log'la
+            Log.d("Error", "Error fetching place details: ${e.message}", e)
+            null // Hata durumunda null döner
+        }
     }
+
 }

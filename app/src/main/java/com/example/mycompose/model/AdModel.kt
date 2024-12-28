@@ -10,6 +10,8 @@ data class AdModel(
     val locationId: String = "",
     val timestamp: Long = System.currentTimeMillis() ,// Store as Long (epoch time)
     val category:String="",
-    val adDate: String = "" // Add adDate property
+    val adDate: String = "",
+    val latitude: Double? = null,  // Keep it nullable
+    val longitude: Double? = null  // Keep it nullable
 
 )

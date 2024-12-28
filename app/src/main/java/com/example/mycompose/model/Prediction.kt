@@ -3,7 +3,6 @@ package com.example.mycompose.model
 import kotlinx.serialization.Serializable
 
 
-@Suppress("PLUGIN_IS_NOT_ENABLED")
 @Serializable
 data class Prediction(
     val description: String = "",
@@ -12,10 +11,17 @@ data class Prediction(
     val reference: String = "",
     val structured_formatting: StructuredFormatting = StructuredFormatting(),
     val terms: List<Term> = listOf(),
-    val types: List<String> = listOf()
+    val types: List<String> = listOf(),
 ) {
-    fun toPlace() = Place(
-        id = place_id,
-        name = description
-    )
+    fun toPlace(formattedAddress: String = ""): Place {
+        return Place(
+            id = place_id,
+            name = description,
+            formattedAddress = formattedAddress, // Pass the formattedAddress here
+            latitude = 0.0, // Default value
+            longitude = 0.0 // Default value
+        )
+    }
 }
+
+

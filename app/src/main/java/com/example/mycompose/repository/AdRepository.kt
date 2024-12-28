@@ -43,7 +43,10 @@ class AdRepository @Inject constructor(){
                 userId = data["userId"] as? String ?: "",
                 locationId = data["locationId"] as? String ?: "",
                 timestamp = (data["timestamp"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L,
-                adDate = data["adDate"] as? String?: "" //Retrieve adDate
+                adDate = data["adDate"] as? String?: "", //Retrieve adDate
+                latitude = data["latitude"] as? Double,  // Retrieve latitude
+                longitude = data["longitude"] as? Double // Retrieve longitude
+
             )
         }
     }
@@ -74,7 +77,9 @@ class AdRepository @Inject constructor(){
             userId = data["userId"] as? String ?: "",
             locationId = data["locationId"] as? String ?: "",
             timestamp = (data["timestamp"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L,
-            adDate = data["adDate"] as? String ?: "" // Retrieve adDate
+            adDate = data["adDate"] as? String ?: "",
+            latitude = data["latitude"] as? Double,  // Retrieve latitude
+            longitude = data["longitude"] as? Double // Retrieve longitude
         )
     }
 
