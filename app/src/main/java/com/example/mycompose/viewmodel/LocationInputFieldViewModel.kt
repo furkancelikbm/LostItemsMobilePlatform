@@ -27,6 +27,11 @@ class LocationInputFieldViewModel : ViewModel() {
     var selectedPlace by mutableStateOf<Place?>(null)
         private set
 
+    var selectedLatitude by mutableStateOf<Double?>(null)
+        private set
+    var selectedLongitude by mutableStateOf<Double?>(null)
+        private set
+
     private val placesApi = PlacesApi()
 
     // This will fetch places every time pickUp is changed and return them as state
@@ -59,26 +64,26 @@ class LocationInputFieldViewModel : ViewModel() {
             text = value,
             selection = TextRange(value.length)
         )
-        // Seçilen yerin ID'sini al
+
         val place = pickupLocationPlaces.value.find { it.name == value }
-        unSelectedLocationId = place?.id ?: "" // Seçilen yerin ID'sini kaydet
-        // Fetch detailed information about the selected place
+        unSelectedLocationId = place?.id ?: ""
+
+        // Fetch detailed place information for accurate latitude/longitude
         viewModelScope.launch {
-            unSelectedLocationId.takeIf { it.isNotEmpty() }?.let { placeId ->
-                val placeDetails = fetchPlaceDetailsForPlace(placeId)
-                placeDetails?.let {
-                    selectedPlace = it
-                    Log.d(
-                        "LocationInputFieldViewModel",
-                        "Selected Place Details: Name=${it.name}, Latitude=${it.latitude}, Longitude=${it.longitude}"
-                    )
-                } ?: run {
-                    Log.e("LocationInputFieldViewModel", "Failed to fetch place details for Place ID: $placeId")
-                }
+            val placeDetails = unSelectedLocationId.takeIf { it.isNotEmpty() }?.let { placeId ->
+                fetchPlaceDetailsForPlace(placeId)
             }
+
+            selectedPlace = placeDetails
+            selectedLatitude = placeDetails?.latitude
+            selectedLongitude = placeDetails?.longitude
+
+            Log.d(
+                "LocationInputFieldViewModel",
+                "Selected Place Details: Name=${placeDetails?.name}, Latitude=${selectedLatitude}, Longitude=${selectedLongitude}"
+            )
         }
     }
-
     fun checkAndSelectFirstPlace() {
         // Eğer konum seçilmediyse, ilk öğeyi otomatik olarak seç
         if (pickupLocationPlaces.value.isNotEmpty()) {
