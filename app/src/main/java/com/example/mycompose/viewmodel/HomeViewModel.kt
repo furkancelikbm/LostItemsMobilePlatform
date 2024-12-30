@@ -30,6 +30,14 @@ class HomeViewModel @Inject constructor(
     var selectedState = mutableStateOf("")
         private set
 
+    // Add latitude and longitude to ViewModel
+    var selectedLatitude = mutableStateOf(0.0) // Default to 0.0
+        private set
+    var selectedLongitude = mutableStateOf(0.0) // Default to 0.0
+        private set
+
+
+
     init {
         fetchAds()
     }

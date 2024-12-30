@@ -27,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
 import com.example.mycompose.model.PhotoItem
 import com.example.mycompose.viewmodel.HomeViewModel
+import com.example.mycompose.viewmodel.LocationSelectionViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import java.util.*
@@ -51,6 +52,19 @@ fun Home(navController: NavController) {
     savedStateHandle?.getLiveData<String>("selectedLocation")?.observeForever { city ->
         viewModel.selectedLocation.value = city
     }
+    savedStateHandle?.getLiveData<Double>("latitude")?.observeForever { latitude ->
+        viewModel.selectedLatitude.value = latitude
+    }
+    savedStateHandle?.getLiveData<Double>("longitude")?.observeForever { longitude ->
+        viewModel.selectedLongitude.value = longitude
+    }
+
+
+
+
+
+
+
 
 
     // Filter the photo items based on search query, location, and date
@@ -59,6 +73,8 @@ fun Home(navController: NavController) {
                 (viewModel.selectedLocation.value == "All Locations" || it.location == viewModel.selectedLocation.value) &&
                 (selectedDate.isEmpty() || it.adDate == selectedDate)
     }
+    Log.d("HomeScreen", "Selected location latitude and longitude: ${viewModel.selectedLatitude.value}, ${viewModel.selectedLongitude.value}")
+
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Search Bar Row
@@ -197,8 +213,5 @@ fun PhotoItemView(photoItem: PhotoItem, onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewHome() {
-    Home(navController = rememberNavController())
-}
+
+

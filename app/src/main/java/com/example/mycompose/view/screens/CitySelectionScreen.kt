@@ -71,14 +71,19 @@ fun CitySelectionScreen(
                             // Log the selected city for debugging
                             Log.d("CitySelection", "City clicked: ${city.name}")
 
-                            // Save selected state and city into savedStateHandle
+                            // Save selected state, city, latitude, and longitude into savedStateHandle
                             navController.previousBackStackEntry?.savedStateHandle?.apply {
                                 set("selectedLocation", city.name)
                                 set("selectedState", stateName)
+                                set("latitude", city.latitude)
+                                set("longitude", city.longitude)
                             }
+
 
                             // Log the savedStateHandle update
                             Log.d("CitySelection", "Saved state handle updated with: $stateName")
+                            Log.d("CitySelection", "longi lati cityselection ${city.latitude} ${city.longitude}")
+
 
                             // Pop back to the Home screen
                             navController.popBackStack("Home", inclusive = false)
@@ -103,5 +108,16 @@ fun CityItem(city: LocationCities, onCityClick: () -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(bottom = 4.dp)
         )
+        Text(
+            text = "Longitude: ${city.longitude}",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        Text(
+            text = "Latitude: ${city.latitude}",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
     }
 }
+

@@ -19,8 +19,6 @@ class LocationSelectionViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-
-
     init {
         fetchDataFromFirebase()
     }
@@ -145,4 +143,5 @@ fun fetchCitiesFromFirebase(
             onError(error.message)
         }
     })
+
 }
