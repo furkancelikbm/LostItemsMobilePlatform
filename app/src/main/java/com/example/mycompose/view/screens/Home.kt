@@ -59,20 +59,35 @@ fun Home(navController: NavController) {
         viewModel.selectedLongitude.value = longitude
     }
 
+    val maxDistance = 25.0 // Maximum distance in kilometers
 
-
-
-
-
-
-
-
-    // Filter the photo items based on search query, location, and date
     val filteredItems = photoItems.value.filter {
+        // Filter by search query and date first
         it.title.contains(searchQuery, ignoreCase = true) &&
-                (viewModel.selectedLocation.value == "All Locations" || it.location == viewModel.selectedLocation.value) &&
-                (selectedDate.isEmpty() || it.adDate == selectedDate)
+                (selectedDate.isEmpty() || it.adDate == selectedDate) &&
+
+                // Filter by location and distance
+                (if (viewModel.selectedLocation.value == "All Locations") {
+                    // If "All Locations" is selected, show all items
+                    true
+                } else {
+                    // If a specific location is selected, calculate the distance
+                    val latitude = it.latitude
+                    val longitude = it.longitude
+
+                    // Ensure latitude and longitude are not null before calculating distance
+                    if (latitude != null && longitude != null) {
+                        val distance = calculateDistance(latitude, longitude,
+                            viewModel.selectedLatitude.value!!, viewModel.selectedLongitude.value!!)
+                        distance <= maxDistance // Show items within the specified distance
+                    } else {
+                        false // Exclude items without location data
+                    }
+                })
     }
+
+
+
     Log.d("HomeScreen", "Selected location latitude and longitude: ${viewModel.selectedLatitude.value}, ${viewModel.selectedLongitude.value}")
 
 
@@ -212,6 +227,20 @@ fun PhotoItemView(photoItem: PhotoItem, onClick: () -> Unit) {
         }
     }
 }
+
+fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+    val radius = 6371.0 // Radius of Earth in kilometers
+    val dLat = Math.toRadians(lat2 - lat1)
+    val dLon = Math.toRadians(lon2 - lon1)
+    val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return radius * c // Returns distance in kilometers
+}
+
+
+
 
 
 
