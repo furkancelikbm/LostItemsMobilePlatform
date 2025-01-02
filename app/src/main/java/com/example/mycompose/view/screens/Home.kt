@@ -19,15 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
 import com.example.mycompose.model.PhotoItem
 import com.example.mycompose.viewmodel.HomeViewModel
-import com.example.mycompose.viewmodel.LocationSelectionViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import java.util.*
@@ -38,9 +35,9 @@ fun Home(navController: NavController) {
     val photoItems = viewModel.photoItems.collectAsState(initial = emptyList())
     val isRefreshing = viewModel.isRefreshing.collectAsState(initial = false)
 
-
     var searchQuery by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf("") }
+    var maxDistance by remember { mutableStateOf(25.0) } // Adjustable distance state
 
     val context = LocalContext.current
 
@@ -59,37 +56,27 @@ fun Home(navController: NavController) {
         viewModel.selectedLongitude.value = longitude
     }
 
-    val maxDistance = 25.0 // Maximum distance in kilometers
-
     val filteredItems = photoItems.value.filter {
-        // Filter by search query and date first
         it.title.contains(searchQuery, ignoreCase = true) &&
                 (selectedDate.isEmpty() || it.adDate == selectedDate) &&
-
-                // Filter by location and distance
                 (if (viewModel.selectedLocation.value == "All Locations") {
-                    // If "All Locations" is selected, show all items
                     true
                 } else {
-                    // If a specific location is selected, calculate the distance
                     val latitude = it.latitude
                     val longitude = it.longitude
-
-                    // Ensure latitude and longitude are not null before calculating distance
                     if (latitude != null && longitude != null) {
-                        val distance = calculateDistance(latitude, longitude,
-                            viewModel.selectedLatitude.value!!, viewModel.selectedLongitude.value!!)
-                        distance <= maxDistance // Show items within the specified distance
+                        val distance = calculateDistance(
+                            latitude, longitude,
+                            viewModel.selectedLatitude.value!!, viewModel.selectedLongitude.value!!
+                        )
+                        distance <= maxDistance // Adjustable distance filter
                     } else {
-                        false // Exclude items without location data
+                        false
                     }
                 })
     }
 
-
-
     Log.d("HomeScreen", "Selected location latitude and longitude: ${viewModel.selectedLatitude.value}, ${viewModel.selectedLongitude.value}")
-
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Search Bar Row
@@ -99,7 +86,6 @@ fun Home(navController: NavController) {
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Search Bar
             TextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -118,7 +104,7 @@ fun Home(navController: NavController) {
             )
         }
 
-        // Filter Options Row (Location and Date)
+        // Filter Options Row (Location, Date)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -126,9 +112,8 @@ fun Home(navController: NavController) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Location Dropdown
             Box {
-                Row (
+                Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .clickable {
@@ -138,11 +123,9 @@ fun Home(navController: NavController) {
                         .background(MaterialTheme.colorScheme.surface)
                         .clip(RoundedCornerShape(8.dp))
                         .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-                {
+                ) {
                     Text(
-                        text = "${viewModel.selectedState.value},${viewModel.selectedLocation.value}"
-
+                        text = "${viewModel.selectedState.value}, ${viewModel.selectedLocation.value}"
                     )
                 }
             }
@@ -151,9 +134,9 @@ fun Home(navController: NavController) {
             val calendar = Calendar.getInstance()
             val datePickerDialog = DatePickerDialog(
                 context,
-                { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+                { _, year, month, dayOfMonth ->
                     selectedDate = String.format("%02d/%02d/%02d", dayOfMonth, month + 1, year % 100)
-                    Log.d("HomeScreen", "Selected date: $selectedDate") // Log the selected date
+                    Log.d("HomeScreen", "Selected date: $selectedDate")
                 },
                 calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)
             )
@@ -169,13 +152,30 @@ fun Home(navController: NavController) {
             )
         }
 
+        // Conditionally Display Slider for Distance
+        if (viewModel.selectedLocation.value != "All Locations") {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Distance: ${maxDistance.toInt()} km")
+                Spacer(modifier = Modifier.width(8.dp))
+                Slider(
+                    value = maxDistance.toFloat(),
+                    onValueChange = { maxDistance = it.toDouble() },
+                    valueRange = 1f..100f, // Range from 1 km to 100 km
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
         // SwipeRefresh with LazyVerticalGrid for displaying photos
         SwipeRefresh(
             state = rememberSwipeRefreshState(isRefreshing.value),
-            onRefresh = { viewModel.refreshPhotos() }) {
-
-            Spacer(modifier = Modifier.height(1.dp))
-
+            onRefresh = { viewModel.refreshPhotos() }
+        ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(8.dp),
@@ -193,6 +193,7 @@ fun Home(navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun PhotoItemView(photoItem: PhotoItem, onClick: () -> Unit) {
