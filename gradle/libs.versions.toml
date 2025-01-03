@@ -34,6 +34,8 @@ playServicesMaps = "19.0.0"
 playServicesMapsVersion = "19.0.0"
 retrofit = "2.9.0"
 runtimeLivedataVersion = "1.7.1"
+tensorflowLite = "2.13.0"
+tensorflowLiteTaskVision = "0.4.4"
 webkit = "1.11.0"
 coilCompose="2.6.0"
 runtimeLivedata = "1.7.1"
@@ -97,6 +99,8 @@ androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtim
 play-services-maps-v1802 = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMapsVersion" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 firebase-database-ktx = { group = "com.google.firebase", name = "firebase-database-ktx", version.ref = "firebaseDatabaseKtx" }
+tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflowLite" }
+tensorflow-lite-task-vision = { module = "org.tensorflow:tensorflow-lite-task-vision", version.ref = "tensorflowLiteTaskVision" }
 
 
 

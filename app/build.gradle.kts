@@ -144,6 +144,12 @@ dependencies {
 
     implementation ("com.google.accompanist:accompanist-swiperefresh:0.36.0")
 
+    // TensorFlow Lite
+    implementation(libs.tensorflow.lite.task.vision)
+    implementation(libs.tensorflow.lite)
+
+
+
 }
 
 kapt {

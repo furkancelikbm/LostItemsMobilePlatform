@@ -1,6 +1,9 @@
 package com.example.mycompose.view.screens
 
 import LocationInputField
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -32,12 +35,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
 import com.example.mycompose.viewmodel.CreateAdScreenViewModel
 import com.example.mycompose.view.components.TransparentCircularProgressBar
+import com.example.mycompose.viewmodel.AdPredictionViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 @Composable
 fun CreateAdScreen(
@@ -46,10 +52,21 @@ fun CreateAdScreen(
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+
+    // Inject AdPredictionViewModel with Hilt
+    val predictionViewModel: AdPredictionViewModel = hiltViewModel()
+
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
-        uri?.let { viewModel.addImage(it) }
+        uri?.let {
+            viewModel.addImage(it)
+            // Convert the selected image Uri to Bitmap for prediction
+            val bitmap = getBitmapFromUri(context, it)
+            bitmap?.let {predictionViewModel.predictImage(it)
+                // Log the prediction output here
+                Log.d("CreateAdScreen", "Prediction Result: ${predictionViewModel.predictionResult.value}") }
+        }
     }
 
     val selectedCategory =viewModel.selectedCategory.value
@@ -236,4 +253,9 @@ fun AdButton(onClick: () -> Unit, text: String) {
 @Composable
 fun CreateAdScreenPreview() {
     CreateAdScreen(navController = rememberNavController())
+}
+
+fun getBitmapFromUri(context: Context, uri: Uri): Bitmap? {
+    val inputStream = context.contentResolver.openInputStream(uri)
+    return BitmapFactory.decodeStream(inputStream)
 }
