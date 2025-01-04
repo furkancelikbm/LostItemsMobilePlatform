@@ -5,7 +5,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,13 +32,15 @@ fun LocationInputField(
     placeholder: String,
     locations: List<Place>,
     onLocationClick: (Place) -> Unit,
-    checkAndFirstPlace: () -> Unit
+    checkAndFirstPlace: () -> Unit,
+    onLocationButtonClick: () -> Unit // Lambda function for button click action
 ) {
     var showSuggestions by remember { mutableStateOf(true) }
     val focusRequester = remember { FocusRequester() }
 
-    Box(modifier = Modifier.padding(16.dp)) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+    Box(modifier = Modifier.padding(3.dp)) {
+        // Outer Box to position TextField and IconButton
+        Box(modifier = Modifier.fillMaxWidth()) {
             // TextField for input
             BasicTextField(
                 value = value,
@@ -46,7 +52,7 @@ fun LocationInputField(
                     .fillMaxWidth()
                     .border(1.dp, MaterialTheme.colorScheme.outline)
                     .background(MaterialTheme.colorScheme.background)
-                    .padding(8.dp)
+                    .padding(start = 16.dp, end = 48.dp, top = 8.dp, bottom = 8.dp) // Reduced padding on the right
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
                         if (!focusState.isFocused) {
@@ -67,6 +73,23 @@ fun LocationInputField(
                     }
                 }
             )
+
+            // IconButton with Location Icon, fixed position to the right side
+            IconButton(
+                onClick = onLocationButtonClick,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd) // Align button to the right side of the Box
+                    .padding(0.dp) // No extra padding here, use TextField padding instead
+                    .size(40.dp) // Set a fixed size for the button
+                    .padding(end = 8.dp) // Optional: Space between TextField and IconButton
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.LocationOn,
+                    contentDescription = "Select Location",
+                    modifier = Modifier.size(24.dp), // Set the icon size
+                    tint = MaterialTheme.colorScheme.onSurface // Set icon color to match theme
+                )
+            }
         }
 
         // Popup for displaying location suggestions

@@ -18,6 +18,21 @@ class AdPredictionViewModel @Inject constructor(private val modelRepository: Mod
 
     val predictionResult = mutableStateOf<String>("")
 
+    // Track the predicted labels for frequency calculation
+    private val predictedLabels = mutableListOf<Int>()
+
+    // Define the item labels
+    private val itemLabels = listOf(
+        "BackPack",      // 0
+        "ChargerDevice", // 1
+        "Glasses",       // 2
+        "Hat",           // 3
+        "Headphones",    // 4
+        "Phone",         // 5
+        "Wallet",        // 6
+        "Watch"          // 7
+    )
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             modelRepository.loadModel()
@@ -30,15 +45,25 @@ class AdPredictionViewModel @Inject constructor(private val modelRepository: Mod
                 val byteBuffer = convertBitmapToByteBuffer(bitmap)
                 val result = modelRepository.predict(byteBuffer)
 
-                // En yüksek olasılığı ve tahmin edilen etiketi al
-                val maxProbability = result.maxOrNull() ?: 0f
+                // Get the predicted label index and confidence
                 val predictedLabel = result.argmax()
                 val confidence = result[predictedLabel]
 
-                predictionResult.value = "Predicted Label: $predictedLabel, Confidence: ${"%.2f".format(confidence * 100)}%"
+                // Add the predicted label to the list for frequency analysis
+                predictedLabels.add(predictedLabel)
+
+                // Get the most frequent label
+                val mostFrequentLabel = getMostFrequentLabel(predictedLabels)
+
+                // Update the prediction result with the label and confidence
+                predictionResult.value = "Most Frequent Label: ${itemLabels[mostFrequentLabel]}, Confidence: ${"%.2f".format(confidence * 100)}%"
+
+                // Log information for debugging
                 Log.d("AdPrediction", "ByteBuffer content: ${byteBuffer}")
                 Log.d("AdPrediction", "Raw output: ${result.joinToString(", ")}")
                 Log.d("AdPrediction", "Prediction result: ${result.joinToString(", ")}")
+                Log.d("AdPrediction", "Predicted label: ${itemLabels[predictedLabel]} (Index: $predictedLabel), Confidence: ${"%.2f".format(confidence * 100)}%")
+                Log.d("AdPrediction", "Most Frequent Label: ${itemLabels[mostFrequentLabel]}")
             } catch (e: Exception) {
                 Log.e("AdPrediction", "Prediction failed: ${e.message}")
             }
@@ -59,7 +84,7 @@ class AdPredictionViewModel @Inject constructor(private val modelRepository: Mod
             for (j in 0 until 224) {
                 val value = intValues[pixel++]
 
-                // R, G, B değerlerini direk olarak 0-255 arasında ekle
+                // R, G, B values
                 byteBuffer.putFloat((value shr 16 and 0xFF).toFloat()) // Red
                 byteBuffer.putFloat((value shr 8 and 0xFF).toFloat())  // Green
                 byteBuffer.putFloat((value and 0xFF).toFloat())        // Blue
@@ -68,7 +93,6 @@ class AdPredictionViewModel @Inject constructor(private val modelRepository: Mod
 
         return byteBuffer
     }
-
 
     private fun FloatArray.argmax(): Int {
         var maxIndex = 0
@@ -81,6 +105,11 @@ class AdPredictionViewModel @Inject constructor(private val modelRepository: Mod
             }
         }
         return maxIndex
+    }
+
+    // Function to calculate the most frequent label in the predictions
+    private fun getMostFrequentLabel(labels: List<Int>): Int {
+        return labels.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key ?: -1
     }
 
     override fun onCleared() {
