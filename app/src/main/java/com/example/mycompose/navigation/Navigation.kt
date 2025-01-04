@@ -24,6 +24,7 @@ import com.example.mycompose.view.screens.ChooseCategoryScreen
 import com.example.mycompose.view.screens.CitySelectionScreen
 import com.example.mycompose.view.screens.CreateAdScreen
 import com.example.mycompose.view.screens.LocationSelectionScreen
+import com.example.mycompose.view.screens.MapScreen
 import com.example.mycompose.view.screens.MessageBoxScreen
 import com.example.mycompose.view.screens.MessageScreen
 import com.example.mycompose.viewmodel.MessageViewModel
@@ -111,6 +112,11 @@ fun Navigation(
                 )
             }
         }
+
+        composable("mapScreen") {
+            MapScreen(navController = navController)
+        }
+
 
 
     }

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class LocationInputFieldViewModel : ViewModel() {
 
@@ -78,10 +79,8 @@ class LocationInputFieldViewModel : ViewModel() {
             selectedLatitude = placeDetails?.latitude
             selectedLongitude = placeDetails?.longitude
 
-            Log.d(
-                "LocationInputFieldViewModel",
-                "Selected Place Details: Name=${placeDetails?.name}, Latitude=${selectedLatitude}, Longitude=${selectedLongitude}"
-            )
+            Timber.tag("LocationInputFieldViewModel")
+                .d("Selected Place Details: Name=${placeDetails?.name}, Latitude=${selectedLatitude}, Longitude=${selectedLongitude}")
         }
     }
     fun checkAndSelectFirstPlace() {

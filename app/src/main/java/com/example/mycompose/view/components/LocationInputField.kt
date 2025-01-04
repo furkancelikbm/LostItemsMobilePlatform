@@ -74,20 +74,19 @@ fun LocationInputField(
                 }
             )
 
-            // IconButton with Location Icon, fixed position to the right side
             IconButton(
                 onClick = onLocationButtonClick,
                 modifier = Modifier
-                    .align(Alignment.CenterEnd) // Align button to the right side of the Box
-                    .padding(0.dp) // No extra padding here, use TextField padding instead
-                    .size(40.dp) // Set a fixed size for the button
-                    .padding(end = 8.dp) // Optional: Space between TextField and IconButton
+                    .align(Alignment.CenterEnd)
+                    .padding(0.dp)
+                    .size(40.dp)
+                    .padding(end = 8.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.LocationOn,
                     contentDescription = "Select Location",
-                    modifier = Modifier.size(24.dp), // Set the icon size
-                    tint = MaterialTheme.colorScheme.onSurface // Set icon color to match theme
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

@@ -127,7 +127,6 @@ fun CreateAdScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Location Input
             LocationInputField(
                 value = viewModel.locationInputFieldViewModel.pickUp,
                 onValueChange = { viewModel.locationInputFieldViewModel.onPickUpValueChanged(it) },
@@ -143,11 +142,11 @@ fun CreateAdScreen(
                     viewModel.locationId.value = viewModel.locationInputFieldViewModel.unSelectedLocationId
                 },
                 onLocationButtonClick = {
-                    // Handle button click logic here, for example:
                     Log.d("CreateAdScreen", "Location button clicked")
-                    // You can perform any action when the location button is clicked
+                    navController.navigate("mapScreen") // Navigate to the MapScreen
                 }
             )
+
 
             Spacer(modifier = Modifier.height(16.dp))
 

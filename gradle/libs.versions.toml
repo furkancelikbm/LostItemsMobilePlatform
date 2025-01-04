@@ -40,6 +40,8 @@ webkit = "1.11.0"
 coilCompose="2.6.0"
 runtimeLivedata = "1.7.1"
 firebaseDatabaseKtx = "21.0.0"
+timber = "5.0.1"
+
 
 
 
@@ -101,6 +103,8 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 firebase-database-ktx = { group = "com.google.firebase", name = "firebase-database-ktx", version.ref = "firebaseDatabaseKtx" }
 tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflowLite" }
 tensorflow-lite-task-vision = { module = "org.tensorflow:tensorflow-lite-task-vision", version.ref = "tensorflowLiteTaskVision" }
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+
 
 
 

@@ -1,0 +1,201 @@
+package com.example.mycompose.view.screens
+
+
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.window.PopupProperties
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.example.mycompose.viewmodel.MapViewModel
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MapScreen(navController: NavHostController) {
+    val mapViewModel: MapViewModel = viewModel()
+    val context = LocalContext.current
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val cameraPositionState = rememberCameraPositionState()
+    val focusRequester = remember { FocusRequester() }
+    var searchText by remember { mutableStateOf("") }
+    val suggestions by mapViewModel.locationSuggestions
+    var showSuggestions by remember { mutableStateOf(false) }
+
+    // Permission launcher to request location permission
+    val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            // Fetch user location once permission is granted
+            mapViewModel.fetchUserLocation(context, fusedLocationClient)
+        } else {
+            // Optionally, show a message or UI to inform the user that location permission is needed
+        }
+    }
+
+    // Check if location permission is granted
+    val hasLocationPermission = ContextCompat.checkSelfPermission(
+        context,
+        android.Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    // Location manager to check if GPS is enabled
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+
+    // Request permission inside LaunchedEffect if not already granted and GPS is enabled
+    LaunchedEffect(Unit) {
+        if (!hasLocationPermission) {
+            locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            if (!isGpsEnabled) {
+                // Show a message or dialog asking the user to enable GPS
+                // You can use an AlertDialog or a Snackbar to inform the user and give them the option to open settings
+                val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                context.startActivity(intent)
+            } else {
+                mapViewModel.fetchUserLocation(context, fusedLocationClient)
+            }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Map") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                mapViewModel.userLocation.value?.let {
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
+                }
+            }) {
+                Icon(imageVector = Icons.Default.MyLocation, contentDescription = "Center on Location")
+            }
+        }
+    ) { padding ->
+
+        Column(modifier = Modifier.padding(padding)) {
+
+            // Search Bar
+            TextField(
+                value = searchText,
+                onValueChange = { input ->
+                    searchText = input
+                    if (input.isNotEmpty()) {
+                        mapViewModel.fetchLocationSuggestions(input, context)
+                        showSuggestions = true
+                    } else {
+                        showSuggestions = false
+                    }
+                },
+                placeholder = { Text("Search location") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        // Ensure the search bar stays focused even after "done"
+                        focusRequester.requestFocus()
+                    }
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+            )
+
+            // Suggestions Popup
+            if (showSuggestions && suggestions.isNotEmpty()) {
+                Popup(
+                    alignment = Alignment.TopStart,
+                    offset = IntOffset(0, 100), // Offset adjusted for better placement below TextField
+                    properties = PopupProperties(
+                        dismissOnClickOutside = true,
+                        focusable = false // Allows user to continue typing after suggestions pop up
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surface)
+                            .border(1.dp, MaterialTheme.colorScheme.outline)
+                    ) {
+                        LazyColumn {
+                            items(suggestions) { suggestion ->
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            searchText = suggestion.description
+                                            showSuggestions = false
+                                            mapViewModel.selectSuggestedLocation(suggestion, cameraPositionState, context) // Pass context
+                                        }
+                                        .padding(8.dp)
+                                        .background(MaterialTheme.colorScheme.surface)
+                                ) {
+                                    Text(
+                                        text = suggestion.description,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+
+            // Google Map
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState
+            ) {
+                mapViewModel.userLocation.value?.let {
+                    Marker(
+                        state = MarkerState(position = it),
+                        title = "Your Location",
+                        snippet = "This is where you are currently located."
+                    )
+                }
+            }
+        }
+    }
+}
