@@ -47,6 +47,7 @@ fun MapScreen(navController: NavHostController) {
     val mapViewModel: MapViewModel = viewModel()
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
     val cameraPositionState = rememberCameraPositionState()
     val focusRequester = remember { FocusRequester() }
     var searchText by remember { mutableStateOf("") }
@@ -57,37 +58,17 @@ fun MapScreen(navController: NavHostController) {
     val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
             // Fetch user location once permission is granted
-            mapViewModel.fetchUserLocation(context, fusedLocationClient)
+            mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState)
         } else {
             // Optionally, show a message or UI to inform the user that location permission is needed
         }
     }
 
-    // Check if location permission is granted
-    val hasLocationPermission = ContextCompat.checkSelfPermission(
-        context,
-        android.Manifest.permission.ACCESS_FINE_LOCATION
-    ) == PackageManager.PERMISSION_GRANTED
+    // Observe camera position state
+    val cameraPosition = mapViewModel.cameraPositionState.value
+    cameraPositionState.position = cameraPosition
 
-    // Location manager to check if GPS is enabled
-    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
-    // Request permission inside LaunchedEffect if not already granted and GPS is enabled
-    LaunchedEffect(Unit) {
-        if (!hasLocationPermission) {
-            locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
-        } else {
-            if (!isGpsEnabled) {
-                // Show a message or dialog asking the user to enable GPS
-                // You can use an AlertDialog or a Snackbar to inform the user and give them the option to open settings
-                val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                context.startActivity(intent)
-            } else {
-                mapViewModel.fetchUserLocation(context, fusedLocationClient)
-            }
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -99,16 +80,38 @@ fun MapScreen(navController: NavHostController) {
                     }
                 }
             )
-        },
-        floatingActionButton = {
+        },floatingActionButton = {
             FloatingActionButton(onClick = {
-                mapViewModel.userLocation.value?.let {
-                    cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
+                // Check if location permission is granted
+                if (ContextCompat.checkSelfPermission(
+                        context,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Check if GPS is enabled
+                    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                    val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+
+                    if (isGpsEnabled) {
+                        // Fetch the user's current location and update the camera position
+                        mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState)
+                    } else {
+                        // Prompt the user to enable GPS
+                        val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                        context.startActivity(intent)
+                    }
+                } else {
+                    // Request permission if not granted
+                    locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
                 }
             }) {
                 Icon(imageVector = Icons.Default.MyLocation, contentDescription = "Center on Location")
             }
         }
+
+
+
+
     ) { padding ->
 
         Column(modifier = Modifier.padding(padding)) {

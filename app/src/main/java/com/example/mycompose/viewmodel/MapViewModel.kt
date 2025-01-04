@@ -20,6 +20,7 @@ import com.google.maps.android.compose.CameraPositionState
 import timber.log.Timber
 import androidx.lifecycle.viewModelScope
 import com.example.mycompose.model.Suggestion
+import com.google.android.gms.location.LocationRequest
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
@@ -35,20 +36,37 @@ class MapViewModel : ViewModel() {
     private val _locationSuggestions = mutableStateOf<List<Suggestion>>(emptyList())
     val locationSuggestions: State<List<Suggestion>> = _locationSuggestions
 
-    fun fetchUserLocation(context: Context, fusedLocationClient: FusedLocationProviderClient) {
+    // Camera position state
+    private val _cameraPositionState = mutableStateOf(CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), 15f))
+    val cameraPositionState: State<CameraPosition> = _cameraPositionState
+
+    fun fetchUserLocation(
+        context: Context,
+        fusedLocationClient: FusedLocationProviderClient,
+        cameraPositionState: CameraPositionState // Add this parameter
+    ) {
         if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                location?.let {
-                    _userLocation.value = LatLng(it.latitude, it.longitude)
-                } ?: run {
-                    Timber.e("Location is null")
+            fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener { location ->
+                    location?.let {
+                        _userLocation.value = LatLng(it.latitude, it.longitude)
+                        // Update the camera position after getting the current location
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(it.latitude, it.longitude), 15f)
+                    } ?: run {
+                        Timber.e("Location is null")
+                    }
                 }
-            }
+                .addOnFailureListener { exception ->
+                    Timber.e(exception, "Failed to get current location")
+                }
         } else {
             Timber.e("Permission not granted")
-            // You might want to handle the permission request here if needed
         }
     }
+
+
+
+
 
     fun fetchLocationSuggestions(query: String, context: Context) {
         if (!Places.isInitialized()) {
