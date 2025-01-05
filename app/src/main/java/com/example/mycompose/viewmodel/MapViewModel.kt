@@ -1,14 +1,9 @@
 package com.example.mycompose.viewmodel
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
-import android.provider.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
@@ -17,7 +12,6 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
-import timber.log.Timber
 import androidx.lifecycle.viewModelScope
 import com.example.mycompose.model.Suggestion
 import com.google.android.gms.location.LocationRequest
@@ -49,24 +43,41 @@ class MapViewModel : ViewModel() {
             fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener { location ->
                     location?.let {
-                        _userLocation.value = LatLng(it.latitude, it.longitude)
+                        val latLng = LatLng(it.latitude, it.longitude)
+                        _userLocation.value = latLng
+
                         // Update the camera position after getting the current location
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(it.latitude, it.longitude), 15f)
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 15f)
+
+                        // Log latitude and longitude
+                        Log.d("MapViewModel", "User's current location: Lat: ${it.latitude}, Lng: ${it.longitude}")
+
+                        // Convert the latitude and longitude to a place name using Geocoder
+                        try {
+                            val geocoder = Geocoder(context)
+                            val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+                            if (addresses!!.isNotEmpty()) {
+                                val address = addresses[0]
+                                val placeName = address.getAddressLine(0)
+                                // Log place name
+                                Log.d("MapViewModel", "Place Name: $placeName")
+                            } else {
+                                Log.e("MapViewModel", "No address found for the location")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("MapViewModel", "Error getting address: ${e.localizedMessage}")
+                        }
                     } ?: run {
-                        Timber.e("Location is null")
+                        Log.e("MapViewModel", "Location is null")
                     }
                 }
                 .addOnFailureListener { exception ->
-                    Timber.e(exception, "Failed to get current location")
+                    Log.e("MapViewModel", "Failed to get current location", exception)
                 }
         } else {
-            Timber.e("Permission not granted")
+            Log.e("MapViewModel", "Permission not granted")
         }
     }
-
-
-
-
 
     fun fetchLocationSuggestions(query: String, context: Context) {
         if (!Places.isInitialized()) {
@@ -85,7 +96,7 @@ class MapViewModel : ViewModel() {
                 }
                 _locationSuggestions.value = suggestions
             } catch (e: Exception) {
-                Timber.e("Error fetching suggestions: ${e.localizedMessage}")
+                Log.e("MapViewModel", "Error fetching suggestions: ${e.localizedMessage}")
             }
         }
     }
@@ -109,10 +120,10 @@ class MapViewModel : ViewModel() {
                     _userLocation.value = it
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
                 } ?: run {
-                    Timber.e("Location not found for placeId: $placeId")
+                    Log.e("MapViewModel", "Location not found for placeId: $placeId")
                 }
             } catch (e: Exception) {
-                Timber.e("Error fetching place details: ${e.localizedMessage}")
+                Log.e("MapViewModel", "Error fetching place details: ${e.localizedMessage}")
             }
         }
     }
@@ -133,11 +144,10 @@ class MapViewModel : ViewModel() {
                 // Update camera position to the searched location
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 15f)
             } else {
-                Timber.e("No location found for query: $query")
+                Log.e("MapViewModel", "No location found for query: $query")
             }
         } catch (e: Exception) {
-            Timber.e("Error searching for location: ${e.localizedMessage}")
+            Log.e("MapViewModel", "Error searching for location: ${e.localizedMessage}")
         }
     }
-
 }
