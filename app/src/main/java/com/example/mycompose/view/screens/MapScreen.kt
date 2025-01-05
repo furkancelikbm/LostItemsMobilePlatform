@@ -81,33 +81,44 @@ fun MapScreen(navController: NavHostController) {
                 }
             )
         },floatingActionButton = {
-            FloatingActionButton(onClick = {
-                // Check if location permission is granted
-                if (ContextCompat.checkSelfPermission(
-                        context,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    // Check if GPS is enabled
-                    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                    val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.BottomEnd // Keeps the FAB aligned to the bottom-right
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        // Check if location permission is granted
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                android.Manifest.permission.ACCESS_FINE_LOCATION
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            // Check if GPS is enabled
+                            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                            val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
-                    if (isGpsEnabled) {
-                        // Fetch the user's current location and update the camera position
-                        mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState)
-                    } else {
-                        // Prompt the user to enable GPS
-                        val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                        context.startActivity(intent)
-                    }
-                } else {
-                    // Request permission if not granted
-                    locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                            if (isGpsEnabled) {
+                                // Fetch the user's current location and update the camera position
+                                mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState)
+                            } else {
+                                // Prompt the user to enable GPS
+                                val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                                context.startActivity(intent)
+                            }
+                        } else {
+                            // Request permission if not granted
+                            locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                        }
+                    },
+                    modifier = Modifier
+                        .padding(end = 0.dp, bottom = 100.dp) // Adjust the padding for proper positioning
+                ) {
+                    Icon(imageVector = Icons.Default.MyLocation, contentDescription = "Center on Location")
                 }
-            }) {
-                Icon(imageVector = Icons.Default.MyLocation, contentDescription = "Center on Location")
             }
         }
+
+
 
 
 
