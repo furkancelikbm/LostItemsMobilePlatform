@@ -34,10 +34,14 @@ class MapViewModel : ViewModel() {
     private val _cameraPositionState = mutableStateOf(CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), 15f))
     val cameraPositionState: State<CameraPosition> = _cameraPositionState
 
+    private val _placeName = mutableStateOf("")
+    val placeName: State<String> = _placeName
+
+
     fun fetchUserLocation(
         context: Context,
         fusedLocationClient: FusedLocationProviderClient,
-        cameraPositionState: CameraPositionState // Add this parameter
+        cameraPositionState: CameraPositionState
     ) {
         if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
@@ -49,18 +53,14 @@ class MapViewModel : ViewModel() {
                         // Update the camera position after getting the current location
                         cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 15f)
 
-                        // Log latitude and longitude
-                        Log.d("MapViewModel", "User's current location: Lat: ${it.latitude}, Lng: ${it.longitude}")
-
                         // Convert the latitude and longitude to a place name using Geocoder
                         try {
                             val geocoder = Geocoder(context)
                             val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                            if (addresses!!.isNotEmpty()) {
+                            if (addresses!!.isNotEmpty()) {  // Fixed the typo here
                                 val address = addresses[0]
                                 val placeName = address.getAddressLine(0)
-                                // Log place name
-                                Log.d("MapViewModel", "Place Name: $placeName")
+                                _placeName.value = placeName // Update place name
                             } else {
                                 Log.e("MapViewModel", "No address found for the location")
                             }
@@ -79,9 +79,11 @@ class MapViewModel : ViewModel() {
         }
     }
 
+
+
     fun fetchLocationSuggestions(query: String, context: Context) {
         if (!Places.isInitialized()) {
-            Places.initialize(context, "AIzaSyB7giJpXXt25u0Ald-xIccjGfYUpGoNhHo") // Use your own API key
+            Places.initialize(context, "AIzaSyB7giJpXXt25u0Ald-xIccjGfYUpGoNhHo") // Replace with your actual API key
         }
         val placesClient = Places.createClient(context)
         val request = FindAutocompletePredictionsRequest.builder()
@@ -92,7 +94,7 @@ class MapViewModel : ViewModel() {
             try {
                 val response = placesClient.findAutocompletePredictions(request).await()
                 val suggestions = response.autocompletePredictions.map {
-                    Suggestion(it.placeId, it.getFullText(null).toString())
+                    Suggestion(it.placeId, it.getFullText(null).toString()) // Populate description with full text
                 }
                 _locationSuggestions.value = suggestions
             } catch (e: Exception) {
@@ -101,24 +103,32 @@ class MapViewModel : ViewModel() {
         }
     }
 
+
     fun selectSuggestedLocation(suggestion: Suggestion, cameraPositionState: CameraPositionState, context: Context) {
+        Log.d("MapViewModel", "Selected Suggestion: ${suggestion.description}") // Log the full suggestion text
         fetchPlaceDetails(suggestion.placeId, cameraPositionState, context)
     }
 
-    // Fetch place details using the placeId
     private fun fetchPlaceDetails(placeId: String, cameraPositionState: CameraPositionState, context: Context) {
         val placesClient = Places.createClient(context)
 
-        val placeFields = listOf(Place.Field.LAT_LNG)  // We need the latitude and longitude
+        // Include fields for name, location, and description (address)
+        val placeFields = listOf(Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.ADDRESS)
         val request = FetchPlaceRequest.builder(placeId, placeFields).build()
 
         viewModelScope.launch {
             try {
                 val response = placesClient.fetchPlace(request).await()
                 val place = response.place
-                place.latLng?.let {
-                    _userLocation.value = it
-                    cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
+                place.latLng?.let { latLng ->
+                    _userLocation.value = latLng
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 15f)
+
+                    // Log place details
+                    Log.d("MapViewModel", "Place Name: ${place.name}")
+                    Log.d("MapViewModel", "Latitude: ${latLng.latitude}")
+                    Log.d("MapViewModel", "Longitude: ${latLng.longitude}")
+                    Log.d("MapViewModel", "Description: ${place.address}")
                 } ?: run {
                     Log.e("MapViewModel", "Location not found for placeId: $placeId")
                 }
@@ -128,26 +138,4 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    fun clearSuggestions() {
-        _locationSuggestions.value = emptyList()
-    }
-
-    fun searchLocation(query: String, context: Context, cameraPositionState: CameraPositionState) {
-        val geocoder = Geocoder(context)
-        try {
-            val addressList = geocoder.getFromLocationName(query, 1)
-            if (!addressList.isNullOrEmpty()) {
-                val location = addressList[0]
-                val latLng = LatLng(location.latitude, location.longitude)
-                _userLocation.value = latLng
-
-                // Update camera position to the searched location
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 15f)
-            } else {
-                Log.e("MapViewModel", "No location found for query: $query")
-            }
-        } catch (e: Exception) {
-            Log.e("MapViewModel", "Error searching for location: ${e.localizedMessage}")
-        }
-    }
 }

@@ -52,12 +52,13 @@ fun MapScreen(navController: NavHostController) {
     val focusRequester = remember { FocusRequester() }
     var searchText by remember { mutableStateOf("") }
     val suggestions by mapViewModel.locationSuggestions
+    val placeName by mapViewModel.placeName // Observe placeName
+
     var showSuggestions by remember { mutableStateOf(false) }
 
     // Permission launcher to request location permission
     val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
-            // Fetch user location once permission is granted
             mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState)
         } else {
             // Optionally, show a message or UI to inform the user that location permission is needed
@@ -67,8 +68,6 @@ fun MapScreen(navController: NavHostController) {
     // Observe camera position state
     val cameraPosition = mapViewModel.cameraPositionState.value
     cameraPositionState.position = cameraPosition
-
-
 
     Scaffold(
         topBar = {
@@ -80,7 +79,8 @@ fun MapScreen(navController: NavHostController) {
                     }
                 }
             )
-        },floatingActionButton = {
+        },
+        floatingActionButton = {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.BottomEnd // Keeps the FAB aligned to the bottom-right
@@ -100,6 +100,8 @@ fun MapScreen(navController: NavHostController) {
                             if (isGpsEnabled) {
                                 // Fetch the user's current location and update the camera position
                                 mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState)
+                                // Set the search text to the current place name
+                                searchText = placeName // Update the search bar with the place name
                             } else {
                                 // Prompt the user to enable GPS
                                 val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
@@ -117,12 +119,6 @@ fun MapScreen(navController: NavHostController) {
                 }
             }
         }
-
-
-
-
-
-
     ) { padding ->
 
         Column(modifier = Modifier.padding(padding)) {
@@ -177,7 +173,7 @@ fun MapScreen(navController: NavHostController) {
                                         .clickable {
                                             searchText = suggestion.description
                                             showSuggestions = false
-                                            mapViewModel.selectSuggestedLocation(suggestion, cameraPositionState, context) // Pass context
+                                            mapViewModel.selectSuggestedLocation(suggestion, cameraPositionState, context)
                                         }
                                         .padding(8.dp)
                                         .background(MaterialTheme.colorScheme.surface)
