@@ -35,7 +35,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.mycompose.viewmodel.MapViewModel
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -56,14 +55,22 @@ fun MapScreen(navController: NavHostController) {
 
     var showSuggestions by remember { mutableStateOf(false) }
 
-    // Permission launcher to request location permission
     val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
-            mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState)
+            // Pass the callback for onLocationFetched
+            mapViewModel.fetchUserLocation(
+                context,
+                fusedLocationClient,
+                cameraPositionState
+            ) { place ->
+                // Callback after location is fetched
+                searchText = place // Set the search text to the current place name
+            }
         } else {
             // Optionally, show a message or UI to inform the user that location permission is needed
         }
     }
+
 
     // Observe camera position state
     val cameraPosition = mapViewModel.cameraPositionState.value
@@ -99,9 +106,10 @@ fun MapScreen(navController: NavHostController) {
 
                             if (isGpsEnabled) {
                                 // Fetch the user's current location and update the camera position
-                                mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState)
-                                // Set the search text to the current place name
-                                searchText = placeName // Update the search bar with the place name
+                                mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState) {
+                                    // Callback after location is fetched
+                                    searchText = placeName // Set the search text to the current place name
+                                }
                             } else {
                                 // Prompt the user to enable GPS
                                 val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
@@ -117,6 +125,7 @@ fun MapScreen(navController: NavHostController) {
                 ) {
                     Icon(imageVector = Icons.Default.MyLocation, contentDescription = "Center on Location")
                 }
+
             }
         }
     ) { padding ->

@@ -37,11 +37,12 @@ class MapViewModel : ViewModel() {
     private val _placeName = mutableStateOf("")
     val placeName: State<String> = _placeName
 
-
+    // Fetch user location
     fun fetchUserLocation(
         context: Context,
         fusedLocationClient: FusedLocationProviderClient,
-        cameraPositionState: CameraPositionState
+        cameraPositionState: CameraPositionState,
+        onLocationFetched: (String) -> Unit // Add the callback parameter
     ) {
         if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
@@ -57,10 +58,11 @@ class MapViewModel : ViewModel() {
                         try {
                             val geocoder = Geocoder(context)
                             val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                            if (addresses!!.isNotEmpty()) {  // Fixed the typo here
+                            if (addresses!!.isNotEmpty()) {
                                 val address = addresses[0]
                                 val placeName = address.getAddressLine(0)
-                                _placeName.value = placeName // Update place name
+                                _placeName.value = placeName
+                                onLocationFetched(placeName) // Invoke the callback with the fetched place name
                             } else {
                                 Log.e("MapViewModel", "No address found for the location")
                             }
@@ -80,10 +82,27 @@ class MapViewModel : ViewModel() {
     }
 
 
+    // Convert latitude and longitude to place name
+    private fun updatePlaceNameFromLocation(latitude: Double, longitude: Double, context: Context) {
+        try {
+            val geocoder = Geocoder(context)
+            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+            if (!addresses.isNullOrEmpty()) {  // Check if address list is not null or empty
+                val address = addresses[0]
+                val placeName = address.getAddressLine(0) ?: "Unknown Location"
+                _placeName.value = placeName // Update place name
+            } else {
+                Log.e("MapViewModel", "No address found for the location")
+            }
+        } catch (e: Exception) {
+            Log.e("MapViewModel", "Error getting address: ${e.localizedMessage}")
+        }
+    }
 
+    // Fetch location suggestions based on query
     fun fetchLocationSuggestions(query: String, context: Context) {
         if (!Places.isInitialized()) {
-            Places.initialize(context, "AIzaSyB7giJpXXt25u0Ald-xIccjGfYUpGoNhHo") // Replace with your actual API key
+            Places.initialize(context, "YOUR_API_KEY") // Replace with your actual API key
         }
         val placesClient = Places.createClient(context)
         val request = FindAutocompletePredictionsRequest.builder()
@@ -103,12 +122,13 @@ class MapViewModel : ViewModel() {
         }
     }
 
-
+    // Handle location selection from suggestions
     fun selectSuggestedLocation(suggestion: Suggestion, cameraPositionState: CameraPositionState, context: Context) {
         Log.d("MapViewModel", "Selected Suggestion: ${suggestion.description}") // Log the full suggestion text
         fetchPlaceDetails(suggestion.placeId, cameraPositionState, context)
     }
 
+    // Fetch place details for selected location
     private fun fetchPlaceDetails(placeId: String, cameraPositionState: CameraPositionState, context: Context) {
         val placesClient = Places.createClient(context)
 
@@ -129,6 +149,8 @@ class MapViewModel : ViewModel() {
                     Log.d("MapViewModel", "Latitude: ${latLng.latitude}")
                     Log.d("MapViewModel", "Longitude: ${latLng.longitude}")
                     Log.d("MapViewModel", "Description: ${place.address}")
+                    // Update place name
+                    _placeName.value = place.address ?: "Unknown Location"
                 } ?: run {
                     Log.e("MapViewModel", "Location not found for placeId: $placeId")
                 }
