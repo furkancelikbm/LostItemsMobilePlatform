@@ -107,7 +107,9 @@ fun MapScreen(navController: NavHostController) {
                             android.Manifest.permission.ACCESS_FINE_LOCATION
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
-                        // Fetch location and pass placeName to update searchText
+                        // Clear any selected marker
+                        selectedMarkerPosition = null
+                        // Fetch location and update the map to the user's current location
                         mapViewModel.checkGpsAndFetchLocation(context, fusedLocationClient) {
                             searchText = it // Update searchText after fetching placeName
                         }
@@ -120,6 +122,7 @@ fun MapScreen(navController: NavHostController) {
                 Icon(Icons.Default.MyLocation, contentDescription = "Locate Me")
             }
         }
+
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             TextField(
@@ -186,16 +189,16 @@ fun MapScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
                 onMapClick = { latLng ->
+                    // Reset selected marker when the user clicks on the map
                     selectedMarkerPosition = latLng
                     cameraPositionState.move(
-                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+                        CameraUpdateFactory.newLatLngZoom(latLng, 15f)
                     )
                     mapViewModel.getPlaceNameForLatLng(context, latLng)
                     searchText = mapViewModel.placeName.value
                 }
-            )
-            {
-                // Show selected marker (ensure LatLng is non-null)
+            ) {
+                // Show the selected marker if it's not null
                 selectedMarkerPosition?.let { position ->
                     Marker(
                         state = MarkerState(position = position),
@@ -204,15 +207,18 @@ fun MapScreen(navController: NavHostController) {
                     )
                 }
 
-                // Show user's current location marker
-                mapViewModel.userLocation.value?.let { position ->
-                    Marker(
-                        state = MarkerState(position = position),
-                        title = "Your Location",
-                        snippet = "This is where you are currently located."
-                    )
+                // Show the user's current location marker if no marker is selected
+                if (selectedMarkerPosition == null) {
+                    mapViewModel.userLocation.value?.let { position ->
+                        Marker(
+                            state = MarkerState(position = position),
+                            title = "Your Location",
+                            snippet = "This is where you are currently located."
+                        )
+                    }
                 }
             }
+
         }
     }
 }
