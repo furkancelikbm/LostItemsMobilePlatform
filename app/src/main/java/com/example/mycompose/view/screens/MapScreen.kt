@@ -1,6 +1,5 @@
 package com.example.mycompose.view.screens
 
-
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -177,7 +176,7 @@ fun MapScreen(navController: NavHostController) {
                     )
                 }
             ) {
-                // Display the marker at the selected position
+                // Display the selected marker if selectedMarkerPosition is not null
                 selectedMarkerPosition?.let {
                     Marker(
                         state = MarkerState(position = it),
@@ -186,16 +185,17 @@ fun MapScreen(navController: NavHostController) {
                     )
                 }
 
-                // Optionally, display the user's location marker
-                mapViewModel.userLocation.value?.let {
-                    Marker(
-                        state = MarkerState(position = it),
-                        title = "Your Location",
-                        snippet = "This is where you are currently located."
-                    )
+                // If selectedMarkerPosition is null, display the user's location marker
+                if (selectedMarkerPosition == null) {
+                    mapViewModel.userLocation.value?.let {
+                        Marker(
+                            state = MarkerState(position = it),
+                            title = "Your Location",
+                            snippet = "This is where you are currently located."
+                        )
+                    }
                 }
             }
-
         }
     }
 }
