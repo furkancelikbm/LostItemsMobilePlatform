@@ -1,8 +1,10 @@
 import android.content.Context
+import android.content.Intent
 import com.google.android.gms.maps.model.LatLng
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.LocationManager
+import android.provider.Settings
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -152,6 +154,8 @@ class MapViewModel : ViewModel() {
             fetchUserLocation(context, fusedLocationClient)
         } else {
             _errorState.value = "GPS is disabled. Please enable it to fetch location."
+            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            context.startActivity(intent)
         }
     }
 }
