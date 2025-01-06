@@ -55,20 +55,7 @@ class MapViewModel : ViewModel() {
                         cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 15f)
 
                         // Convert the latitude and longitude to a place name using Geocoder
-                        try {
-                            val geocoder = Geocoder(context)
-                            val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                            if (addresses!!.isNotEmpty()) {
-                                val address = addresses[0]
-                                val placeName = address.getAddressLine(0)
-                                _placeName.value = placeName
-                                onLocationFetched(placeName) // Invoke the callback with the fetched place name
-                            } else {
-                                Log.e("MapViewModel", "No address found for the location")
-                            }
-                        } catch (e: Exception) {
-                            Log.e("MapViewModel", "Error getting address: ${e.localizedMessage}")
-                        }
+                        updatePlaceNameFromLocation(it.latitude, it.longitude, context, onLocationFetched)
                     } ?: run {
                         Log.e("MapViewModel", "Location is null")
                     }
@@ -81,9 +68,8 @@ class MapViewModel : ViewModel() {
         }
     }
 
-
     // Convert latitude and longitude to place name
-    private fun updatePlaceNameFromLocation(latitude: Double, longitude: Double, context: Context) {
+    private fun updatePlaceNameFromLocation(latitude: Double, longitude: Double, context: Context, onLocationFetched: (String) -> Unit) {
         try {
             val geocoder = Geocoder(context)
             val addresses = geocoder.getFromLocation(latitude, longitude, 1)
@@ -91,6 +77,7 @@ class MapViewModel : ViewModel() {
                 val address = addresses[0]
                 val placeName = address.getAddressLine(0) ?: "Unknown Location"
                 _placeName.value = placeName // Update place name
+                onLocationFetched(placeName) // Invoke the callback with the fetched place name
             } else {
                 Log.e("MapViewModel", "No address found for the location")
             }
@@ -102,7 +89,7 @@ class MapViewModel : ViewModel() {
     // Fetch location suggestions based on query
     fun fetchLocationSuggestions(query: String, context: Context) {
         if (!Places.isInitialized()) {
-            Places.initialize(context, "YOUR_API_KEY") // Replace with your actual API key
+            Places.initialize(context, "AIzaSyB7giJpXXt25u0Ald-xIccjGfYUpGoNhHo") // Replace with your actual API key
         }
         val placesClient = Places.createClient(context)
         val request = FindAutocompletePredictionsRequest.builder()
@@ -160,4 +147,24 @@ class MapViewModel : ViewModel() {
         }
     }
 
+    fun updateCameraPosition(cameraPositionState: CameraPositionState, latLng: LatLng) {
+        cameraPositionState.move(
+            com.google.android.gms.maps.CameraUpdateFactory.newLatLng(latLng)
+        )
+    }
+
+    private suspend fun getLatLngFromSuggestion(suggestion: Suggestion, context: Context): LatLng? {
+        val placesClient = Places.createClient(context)
+
+        val placeFields = listOf(Place.Field.LAT_LNG)
+        val request = FetchPlaceRequest.builder(suggestion.placeId, placeFields).build()
+
+        return try {
+            val response = placesClient.fetchPlace(request).await()
+            response.place.latLng
+        } catch (e: Exception) {
+            Log.e("MapViewModel", "Error fetching LatLng: ${e.localizedMessage}")
+            null
+        }
+    }
 }

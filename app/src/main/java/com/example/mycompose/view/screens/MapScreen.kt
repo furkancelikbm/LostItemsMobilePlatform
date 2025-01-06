@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.mycompose.viewmodel.MapViewModel
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -51,26 +52,22 @@ fun MapScreen(navController: NavHostController) {
     val focusRequester = remember { FocusRequester() }
     var searchText by remember { mutableStateOf("") }
     val suggestions by mapViewModel.locationSuggestions
-    val placeName by mapViewModel.placeName // Observe placeName
+    val placeName by mapViewModel.placeName
 
     var showSuggestions by remember { mutableStateOf(false) }
+    var selectedMarkerPosition by remember { mutableStateOf<LatLng?>(null) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
-            // Pass the callback for onLocationFetched
             mapViewModel.fetchUserLocation(
                 context,
                 fusedLocationClient,
                 cameraPositionState
             ) { place ->
-                // Callback after location is fetched
-                searchText = place // Set the search text to the current place name
+                searchText = place
             }
-        } else {
-            // Optionally, show a message or UI to inform the user that location permission is needed
         }
     }
-
 
     // Observe camera position state
     val cameraPosition = mapViewModel.cameraPositionState.value
@@ -88,51 +85,35 @@ fun MapScreen(navController: NavHostController) {
             )
         },
         floatingActionButton = {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomEnd // Keeps the FAB aligned to the bottom-right
-            ) {
-                FloatingActionButton(
-                    onClick = {
-                        // Check if location permission is granted
-                        if (ContextCompat.checkSelfPermission(
-                                context,
-                                android.Manifest.permission.ACCESS_FINE_LOCATION
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-                            // Check if GPS is enabled
-                            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                            val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+            FloatingActionButton(
+                onClick = {
+                    if (ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                        val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
-                            if (isGpsEnabled) {
-                                // Fetch the user's current location and update the camera position
-                                mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState) {
-                                    // Callback after location is fetched
-                                    searchText = placeName // Set the search text to the current place name
-                                }
-                            } else {
-                                // Prompt the user to enable GPS
-                                val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                                context.startActivity(intent)
+                        if (isGpsEnabled) {
+                            mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState) {
+                                searchText = placeName
                             }
                         } else {
-                            // Request permission if not granted
-                            locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                            val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                            context.startActivity(intent)
                         }
-                    },
-                    modifier = Modifier
-                        .padding(end = 0.dp, bottom = 100.dp) // Adjust the padding for proper positioning
-                ) {
-                    Icon(imageVector = Icons.Default.MyLocation, contentDescription = "Center on Location")
-                }
-
+                    } else {
+                        locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    }
+                },
+                modifier = Modifier.padding(34.dp)
+            ) {
+                Icon(imageVector = Icons.Default.MyLocation, contentDescription = "Center on Location")
             }
         }
     ) { padding ->
-
         Column(modifier = Modifier.padding(padding)) {
-
-            // Search Bar
             TextField(
                 value = searchText,
                 onValueChange = { input ->
@@ -147,26 +128,17 @@ fun MapScreen(navController: NavHostController) {
                 placeholder = { Text("Search location") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        // Ensure the search bar stays focused even after "done"
-                        focusRequester.requestFocus()
-                    }
-                ),
+                keyboardActions = KeyboardActions(onDone = { focusRequester.requestFocus() }),
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester)
             )
 
-            // Suggestions Popup
             if (showSuggestions && suggestions.isNotEmpty()) {
                 Popup(
                     alignment = Alignment.TopStart,
-                    offset = IntOffset(0, 100), // Offset adjusted for better placement below TextField
-                    properties = PopupProperties(
-                        dismissOnClickOutside = true,
-                        focusable = false // Allows user to continue typing after suggestions pop up
-                    )
+                    offset = IntOffset(0, 100),
+                    properties = PopupProperties(dismissOnClickOutside = true, focusable = false)
                 ) {
                     Box(
                         modifier = Modifier
@@ -185,28 +157,36 @@ fun MapScreen(navController: NavHostController) {
                                             mapViewModel.selectSuggestedLocation(suggestion, cameraPositionState, context)
                                         }
                                         .padding(8.dp)
-                                        .background(MaterialTheme.colorScheme.surface)
                                 ) {
-                                    Text(
-                                        text = suggestion.description,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp),
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
+                                    Text(text = suggestion.description, modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSurface)
                                 }
                             }
-
                         }
                     }
                 }
             }
 
-            // Google Map
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
+                cameraPositionState = cameraPositionState,
+                onMapClick = { latLng ->
+                    // Update the selected marker position on map click
+                    selectedMarkerPosition = latLng
+                    cameraPositionState.move(
+                        com.google.android.gms.maps.CameraUpdateFactory.newLatLng(latLng)
+                    )
+                }
             ) {
+                // Display the marker at the selected position
+                selectedMarkerPosition?.let {
+                    Marker(
+                        state = MarkerState(position = it),
+                        title = "Selected Location",
+                        snippet = "Lat: ${it.latitude}, Lng: ${it.longitude}"
+                    )
+                }
+
+                // Optionally, display the user's location marker
                 mapViewModel.userLocation.value?.let {
                     Marker(
                         state = MarkerState(position = it),
@@ -215,6 +195,7 @@ fun MapScreen(navController: NavHostController) {
                     )
                 }
             }
+
         }
     }
 }
