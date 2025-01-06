@@ -38,6 +38,8 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.android.gms.maps.CameraUpdateFactory
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,12 +69,16 @@ fun MapScreen(navController: NavHostController) {
     // Observe camera position state
     val cameraPosition = mapViewModel.userLocation.value
     cameraPosition?.let {
+        // Automatically update camera position when user location is available
         val newCameraPosition = com.google.android.gms.maps.model.CameraPosition.Builder()
             .target(it)
             .zoom(15f)
             .build()
 
-        cameraPositionState.position = newCameraPosition
+        // Update camera position if no selected marker or suggestion is present
+        if (selectedMarkerPosition == null) {
+            cameraPositionState.position = newCameraPosition
+        }
     }
 
     // Update searchText when placeName changes
@@ -155,18 +161,25 @@ fun MapScreen(navController: NavHostController) {
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            searchText = suggestion.description
+                                            searchText = suggestion.fullText
                                             showSuggestions = false
                                             mapViewModel.selectSuggestedLocation(suggestion, context)
+                                            suggestion.latLng?.let { latLng ->
+                                                selectedMarkerPosition = latLng // Ensure latLng is not null
+                                                cameraPositionState.move(
+                                                    CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+                                                )
+                                            }
                                         }
                                         .padding(8.dp)
                                 ) {
-                                    Text(text = suggestion.description, modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSurface)
+                                    Text(text = suggestion.fullText, modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSurface)
                                 }
                             }
                         }
                     }
                 }
+
             }
 
             GoogleMap(
@@ -180,18 +193,21 @@ fun MapScreen(navController: NavHostController) {
                     mapViewModel.getPlaceNameForLatLng(context, latLng)
                     searchText = mapViewModel.placeName.value
                 }
-            ) {
-                selectedMarkerPosition?.let {
+            )
+            {
+                // Show selected marker (ensure LatLng is non-null)
+                selectedMarkerPosition?.let { position ->
                     Marker(
-                        state = MarkerState(position = it),
+                        state = MarkerState(position = position),
                         title = "Selected Location",
-                        snippet = "Lat: ${it.latitude}, Lng: ${it.longitude}"
+                        snippet = "Lat: ${position.latitude}, Lng: ${position.longitude}"
                     )
                 }
 
-                mapViewModel.userLocation.value?.let {
+                // Show user's current location marker
+                mapViewModel.userLocation.value?.let { position ->
                     Marker(
-                        state = MarkerState(position = it),
+                        state = MarkerState(position = position),
                         title = "Your Location",
                         snippet = "This is where you are currently located."
                     )

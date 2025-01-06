@@ -1,4 +1,5 @@
 import android.content.Context
+import com.google.android.gms.maps.model.LatLng
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.LocationManager
@@ -8,10 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mycompose.model.Suggestion
+import com.example.mycompose.model.SuggestionNew
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
@@ -25,8 +25,8 @@ class MapViewModel : ViewModel() {
     private val _userLocation = mutableStateOf<LatLng?>(null)
     val userLocation: State<LatLng?> = _userLocation
 
-    private val _locationSuggestions = mutableStateOf<List<Suggestion>>(emptyList())
-    val locationSuggestions: State<List<Suggestion>> = _locationSuggestions
+    private val _locationSuggestions = mutableStateOf<List<SuggestionNew>>(emptyList())
+    val locationSuggestions: State<List<SuggestionNew>> = _locationSuggestions
 
     private val _placeName = mutableStateOf("")
     val placeName: State<String> = _placeName
@@ -80,7 +80,7 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    // Fetch location suggestions
+    // Fetch location suggestions based on the query
     fun fetchLocationSuggestions(query: String, context: Context) {
         if (!Places.isInitialized()) {
             Places.initialize(context, "AIzaSyB7giJpXXt25u0Ald-xIccjGfYUpGoNhHo")
@@ -92,8 +92,11 @@ class MapViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = placesClient.findAutocompletePredictions(request).await()
-                val suggestions = response.autocompletePredictions.map {
-                    Suggestion(it.placeId, it.getFullText(null).toString())
+                val suggestions = response.autocompletePredictions.map { prediction ->
+                    // Fetch place details to get latLng for each suggestion
+                    val placeId = prediction.placeId
+                    val placeDetails = fetchPlaceDetailsById(placeId, context)
+                    SuggestionNew(placeId, prediction.getFullText(null).toString(), placeDetails?.latLng)
                 }
                 _locationSuggestions.value = suggestions
             } catch (e: Exception) {
@@ -102,26 +105,37 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    // Handle selection of location from suggestions
-    fun selectSuggestedLocation(suggestion: Suggestion, context: Context) {
-        fetchPlaceDetails(suggestion.placeId, context)
+    // Fetch place details for a given placeId
+    private suspend fun fetchPlaceDetailsById(placeId: String, context: Context): Place? {
+        return try {
+            val placesClient = Places.createClient(context)
+            val placeFields = listOf(Place.Field.LAT_LNG)
+            val request = FetchPlaceRequest.builder(placeId, placeFields).build()
+            val response = placesClient.fetchPlace(request).await()
+            response.place
+        } catch (e: Exception) {
+            _errorState.value = "Error fetching place details: ${e.localizedMessage}"
+            null
+        }
     }
 
-    // Fetch details for the selected place
-    private fun fetchPlaceDetails(placeId: String, context: Context) {
-        val placesClient = Places.createClient(context)
-        val placeFields = listOf(Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.ADDRESS)
-        val request = FetchPlaceRequest.builder(placeId, placeFields).build()
-
+    // Select a suggested location and update the user location
+    fun selectSuggestedLocation(suggestion: SuggestionNew, context: Context) {
         viewModelScope.launch {
             try {
+                // Fetch place details using placeId to get LatLng
+                val placesClient = Places.createClient(context)
+                val placeFields = listOf(Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.ADDRESS)
+                val request = FetchPlaceRequest.builder(suggestion.placeId, placeFields).build()
+
                 val response = placesClient.fetchPlace(request).await()
                 val place = response.place
                 place.latLng?.let { latLng ->
+                    // Update user location with fetched LatLng
                     _userLocation.value = latLng
                     _placeName.value = place.address ?: "Unknown Location"
                 } ?: run {
-                    _errorState.value = "Location not found for placeId: $placeId"
+                    _errorState.value = "Location not found for placeId: ${suggestion.placeId}"
                 }
             } catch (e: Exception) {
                 _errorState.value = "Error fetching place details: ${e.localizedMessage}"
@@ -129,9 +143,8 @@ class MapViewModel : ViewModel() {
         }
     }
 
-
     // Check GPS and fetch location
-    fun checkGpsAndFetchLocation(context: Context, fusedLocationClient: FusedLocationProviderClient,onLocationFetched:(String)->Unit) {
+    fun checkGpsAndFetchLocation(context: Context, fusedLocationClient: FusedLocationProviderClient, onLocationFetched: (String) -> Unit) {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
