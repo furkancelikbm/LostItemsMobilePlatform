@@ -2,7 +2,6 @@ package com.example.mycompose.view.screens
 
 import MapViewModel
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -39,8 +38,6 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import androidx.compose.ui.platform.LocalContext
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,17 +59,28 @@ fun MapScreen(navController: NavHostController) {
         if (isGranted) {
             mapViewModel.fetchUserLocation(
                 context,
-                fusedLocationClient,
-                cameraPositionState
-            ) { place ->
-                searchText = place
-            }
+                fusedLocationClient
+            )
         }
     }
 
     // Observe camera position state
-    val cameraPosition = mapViewModel.cameraPositionState.value
-    cameraPositionState.position = cameraPosition
+    val cameraPosition = mapViewModel.userLocation.value
+    cameraPosition?.let {
+        val newCameraPosition = com.google.android.gms.maps.model.CameraPosition.Builder()
+            .target(it)
+            .zoom(15f)
+            .build()
+
+        cameraPositionState.position = newCameraPosition
+    }
+
+    // Update searchText when placeName changes
+    LaunchedEffect(placeName) {
+        if (placeName.isNotEmpty()) {
+            searchText = placeName // Update the searchText with the place name
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -93,16 +101,9 @@ fun MapScreen(navController: NavHostController) {
                             android.Manifest.permission.ACCESS_FINE_LOCATION
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
-                        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                        val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-
-                        if (isGpsEnabled) {
-                            mapViewModel.fetchUserLocation(context, fusedLocationClient, cameraPositionState) {
-                                searchText = placeName
-                            }
-                        } else {
-                            val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                            context.startActivity(intent)
+                        // Fetch location and pass placeName to update searchText
+                        mapViewModel.checkGpsAndFetchLocation(context, fusedLocationClient) {
+                            searchText = it // Update searchText after fetching placeName
                         }
                     } else {
                         locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
@@ -110,7 +111,7 @@ fun MapScreen(navController: NavHostController) {
                 },
                 modifier = Modifier.padding(34.dp)
             ) {
-                Icon(imageVector = Icons.Default.MyLocation, contentDescription = "Center on Location")
+                Icon(Icons.Default.MyLocation, contentDescription = "Locate Me")
             }
         }
     ) { padding ->
@@ -135,6 +136,7 @@ fun MapScreen(navController: NavHostController) {
                     .focusRequester(focusRequester)
             )
 
+            // Suggestion popup
             if (showSuggestions && suggestions.isNotEmpty()) {
                 Popup(
                     alignment = Alignment.TopStart,
@@ -155,7 +157,7 @@ fun MapScreen(navController: NavHostController) {
                                         .clickable {
                                             searchText = suggestion.description
                                             showSuggestions = false
-                                            mapViewModel.selectSuggestedLocation(suggestion, cameraPositionState, context)
+                                            mapViewModel.selectSuggestedLocation(suggestion, context)
                                         }
                                         .padding(8.dp)
                                 ) {
@@ -171,25 +173,14 @@ fun MapScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
                 onMapClick = { latLng ->
-                    // Update the selected marker position on map click
                     selectedMarkerPosition = latLng
-                    // Slow down the camera transition using animateCamera method
                     cameraPositionState.move(
-                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(latLng, 15f) // Zoom level 15f, adjust as needed
+                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(latLng, 15f)
                     )
+                    mapViewModel.getPlaceNameForLatLng(context, latLng)
+                    searchText = mapViewModel.placeName.value
                 }
             ) {
-                // Using LaunchedEffect to launch the coroutine in a composable context when selectedMarkerPosition changes
-                LaunchedEffect(selectedMarkerPosition) {
-                    selectedMarkerPosition?.let { latLng ->
-                        val name = mapViewModel.fetchPlaceName(context, latLng)
-                        name?.let {
-                            searchText = it // Update search bar with place name
-                        }
-                    }
-                }
-
-                // Display the selected marker if selectedMarkerPosition is not null
                 selectedMarkerPosition?.let {
                     Marker(
                         state = MarkerState(position = it),
@@ -198,19 +189,14 @@ fun MapScreen(navController: NavHostController) {
                     )
                 }
 
-                // If selectedMarkerPosition is null, display the user's location marker
-                if (selectedMarkerPosition == null) {
-                    mapViewModel.userLocation.value?.let {
-                        Marker(
-                            state = MarkerState(position = it),
-                            title = "Your Location",
-                            snippet = "This is where you are currently located."
-                        )
-                    }
+                mapViewModel.userLocation.value?.let {
+                    Marker(
+                        state = MarkerState(position = it),
+                        title = "Your Location",
+                        snippet = "This is where you are currently located."
+                    )
                 }
             }
-
         }
+    }
 }
-}
-
