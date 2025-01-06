@@ -1,5 +1,6 @@
 package com.example.mycompose.view.screens
 
+import MapViewModel
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -32,13 +33,14 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.mycompose.viewmodel.MapViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import androidx.compose.ui.platform.LocalContext
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -171,11 +173,22 @@ fun MapScreen(navController: NavHostController) {
                 onMapClick = { latLng ->
                     // Update the selected marker position on map click
                     selectedMarkerPosition = latLng
+                    // Slow down the camera transition using animateCamera method
                     cameraPositionState.move(
-                        com.google.android.gms.maps.CameraUpdateFactory.newLatLng(latLng)
+                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(latLng, 15f) // Zoom level 15f, adjust as needed
                     )
                 }
             ) {
+                // Using LaunchedEffect to launch the coroutine in a composable context when selectedMarkerPosition changes
+                LaunchedEffect(selectedMarkerPosition) {
+                    selectedMarkerPosition?.let { latLng ->
+                        val name = mapViewModel.fetchPlaceName(context, latLng)
+                        name?.let {
+                            searchText = it // Update search bar with place name
+                        }
+                    }
+                }
+
                 // Display the selected marker if selectedMarkerPosition is not null
                 selectedMarkerPosition?.let {
                     Marker(
@@ -196,6 +209,8 @@ fun MapScreen(navController: NavHostController) {
                     }
                 }
             }
+
         }
-    }
 }
+}
+

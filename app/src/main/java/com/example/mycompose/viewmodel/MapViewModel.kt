@@ -1,7 +1,6 @@
-package com.example.mycompose.viewmodel
-
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Address
 import android.location.Geocoder
 import android.util.Log
 import androidx.compose.runtime.State
@@ -167,4 +166,17 @@ class MapViewModel : ViewModel() {
             null
         }
     }
+
+    suspend fun fetchPlaceName(context: Context, latLng: LatLng): String? {
+        val geocoder = Geocoder(context)
+        return try {
+            val addresses: List<Address>? = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+            // Safe check for null or empty list
+            addresses?.firstOrNull()?.getAddressLine(0)
+        } catch (e: Exception) {
+            Log.e("MapViewModel", "Error fetching address: ${e.localizedMessage}")
+            null
+        }
+    }
+
 }
