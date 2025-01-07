@@ -40,7 +40,6 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.android.gms.maps.CameraUpdateFactory
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(navController: NavHostController) {
@@ -56,6 +55,7 @@ fun MapScreen(navController: NavHostController) {
 
     var showSuggestions by remember { mutableStateOf(false) }
     var selectedMarkerPosition by remember { mutableStateOf<LatLng?>(null) }
+    var isLoading by remember { mutableStateOf(false) } // Loading state
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
@@ -122,9 +122,10 @@ fun MapScreen(navController: NavHostController) {
                 Icon(Icons.Default.MyLocation, contentDescription = "Locate Me")
             }
         }
-
     ) { padding ->
+
         Column(modifier = Modifier.padding(padding)) {
+
             TextField(
                 value = searchText,
                 onValueChange = { input ->
@@ -182,7 +183,15 @@ fun MapScreen(navController: NavHostController) {
                         }
                     }
                 }
+            }
 
+            // Show loading indicator while fetching place name
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp)
+                )
             }
 
             GoogleMap(
@@ -194,8 +203,12 @@ fun MapScreen(navController: NavHostController) {
                     cameraPositionState.move(
                         CameraUpdateFactory.newLatLngZoom(latLng, 15f)
                     )
+                    isLoading = true // Set loading to true while fetching the place name
                     mapViewModel.getPlaceNameForLatLng(context, latLng)
-                    searchText = mapViewModel.placeName.value
+                    isLoading = false // Set loading to false after fetching the place name
+                    // Update searchText with the fetched place name
+                    val placeName = mapViewModel.placeName.value
+                    searchText = placeName // Update searchText with the place name
                 }
             ) {
                 // Show the selected marker if it's not null
@@ -218,7 +231,6 @@ fun MapScreen(navController: NavHostController) {
                     }
                 }
             }
-
         }
     }
 }
