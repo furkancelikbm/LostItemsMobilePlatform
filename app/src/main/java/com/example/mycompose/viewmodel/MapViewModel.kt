@@ -73,31 +73,28 @@ class MapViewModel : ViewModel() {
     }
 
 
-    fun getPlaceNameFromLatLng(context: Context, latLng: LatLng): String? {
+    fun getPlaceNameFromLatLng(context: Context, latLng: LatLng): String {
         return try {
             val geocoder = Geocoder(context)
             val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
 
-            // Combine different address components (if available) into a full address.
-            val address = addresses?.firstOrNull()
-            address?.let {
-                val fullAddress = StringBuilder()
-
-                // Append all available address components
-                if (it.thoroughfare != null) fullAddress.append(it.thoroughfare).append(", ")
-                if (it.subThoroughfare != null) fullAddress.append(it.subThoroughfare).append(", ")
-                if (it.locality != null) fullAddress.append(it.locality).append(", ")
-                if (it.adminArea != null) fullAddress.append(it.adminArea).append(", ")
-                if (it.countryName != null) fullAddress.append(it.countryName)
-
-                // Return the full address as a string
-                fullAddress.toString().takeIf { it.isNotEmpty() } ?: "Address not available"
+            if (addresses.isNullOrEmpty()) {
+                "Address not found"
+            } else {
+                val address = addresses[0]
+                listOfNotNull(
+                    address.thoroughfare,    // Street name
+                    address.subThoroughfare, // Street number
+                    address.locality,        // City
+                    address.adminArea,       // State or province
+                    address.countryName      // Country
+                ).joinToString(", ")
             }
         } catch (e: Exception) {
-            _errorState.value = "Error fetching address: ${e.localizedMessage}"
-            null
+            "Error fetching address: ${e.localizedMessage}"
         }
     }
+
 
 
     // Fetch location suggestions based on the query
