@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -155,8 +156,16 @@ fun MapScreen(navController: NavHostController) {
                 keyboardActions = KeyboardActions(onDone = { focusRequester.requestFocus() }),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .focusRequester(focusRequester)
+                    .focusRequester(focusRequester),
+                trailingIcon = {
+                    if (searchText.isNotEmpty()) {
+                        IconButton(onClick = { searchText = "" }) {
+                            Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear Search")
+                        }
+                    }
+                }
             )
+
 
             // Suggestion popup
             if (showSuggestions && suggestions.isNotEmpty()) {
