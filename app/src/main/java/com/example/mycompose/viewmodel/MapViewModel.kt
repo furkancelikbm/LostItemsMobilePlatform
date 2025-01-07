@@ -121,11 +121,11 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    // Select a suggested location and update the user location
+    // Select a suggested location and update the user location with full address
     fun selectSuggestedLocation(suggestion: SuggestionNew, context: Context) {
         viewModelScope.launch {
             try {
-                // Fetch place details using placeId to get LatLng
+                // Fetch place details using placeId to get LatLng and full address
                 val placesClient = Places.createClient(context)
                 val placeFields = listOf(Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.ADDRESS)
                 val request = FetchPlaceRequest.builder(suggestion.placeId, placeFields).build()
@@ -135,6 +135,7 @@ class MapViewModel : ViewModel() {
                 place.latLng?.let { latLng ->
                     // Update user location with fetched LatLng
                     _userLocation.value = latLng
+                    // Set the full address in placeName
                     _placeName.value = place.address ?: "Unknown Location"
                 } ?: run {
                     _errorState.value = "Location not found for placeId: ${suggestion.placeId}"
@@ -144,6 +145,7 @@ class MapViewModel : ViewModel() {
             }
         }
     }
+
 
     // Check GPS and fetch location
     fun checkGpsAndFetchLocation(context: Context, fusedLocationClient: FusedLocationProviderClient, onLocationFetched: (String) -> Unit) {
