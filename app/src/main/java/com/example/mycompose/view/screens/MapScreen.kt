@@ -39,6 +39,9 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.android.gms.maps.CameraUpdateFactory
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +55,11 @@ fun MapScreen(navController: NavHostController) {
     var searchText by remember { mutableStateOf("") }
     val suggestions by mapViewModel.locationSuggestions
     val placeName by mapViewModel.placeName
+
+    val coroutineScope = rememberCoroutineScope()
+    val debounceTime = 500L  // Time in milliseconds for debouncing
+    var debounceJob by remember { mutableStateOf<Job?>(null) }
+
 
     var showSuggestions by remember { mutableStateOf(false) }
     var selectedMarkerPosition by remember { mutableStateOf<LatLng?>(null) }
@@ -131,8 +139,12 @@ fun MapScreen(navController: NavHostController) {
                 onValueChange = { input ->
                     searchText = input
                     if (input.isNotEmpty()) {
-                        mapViewModel.fetchLocationSuggestions(input, context)
-                        showSuggestions = true
+                        debounceJob?.cancel() // Cancel any ongoing job if the user types again
+                        debounceJob = coroutineScope.launch {
+                            delay(debounceTime) // Wait for the user to stop typing
+                            mapViewModel.fetchLocationSuggestions(input, context)
+                            showSuggestions = true
+                        }
                     } else {
                         showSuggestions = false
                     }
