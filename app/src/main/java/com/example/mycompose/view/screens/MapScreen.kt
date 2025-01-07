@@ -58,7 +58,7 @@ fun MapScreen(navController: NavHostController) {
     val placeName by mapViewModel.placeName
 
     val coroutineScope = rememberCoroutineScope()
-    val debounceTime = 500L  // Time in milliseconds for debouncing
+    val debounceTime = 250L  // Time in milliseconds for debouncing
     var debounceJob by remember { mutableStateOf<Job?>(null) }
 
 
@@ -171,7 +171,7 @@ fun MapScreen(navController: NavHostController) {
             if (showSuggestions && suggestions.isNotEmpty()) {
                 Popup(
                     alignment = Alignment.TopStart,
-                    offset = IntOffset(0, 100),
+                    offset = IntOffset(0, 150), // Increase the vertical offset
                     properties = PopupProperties(dismissOnClickOutside = true, focusable = false)
                 ) {
                     Box(
@@ -205,6 +205,7 @@ fun MapScreen(navController: NavHostController) {
                     }
                 }
             }
+
 
             // Show loading indicator while fetching place name
             if (isLoading) {
