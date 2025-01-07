@@ -10,6 +10,8 @@ import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mycompose.model.SuggestionNew
@@ -149,4 +151,12 @@ class MapViewModel : ViewModel() {
             context.startActivity(intent)
         }
     }
+
+    private val _savedLocation = MutableLiveData<Pair<String, LatLng?>>()
+    val savedLocation: LiveData<Pair<String, LatLng?>> get() = _savedLocation
+
+    fun saveLocation(name: String, location: LatLng?) {
+        _savedLocation.value = Pair(name, location)
+    }
+
 }

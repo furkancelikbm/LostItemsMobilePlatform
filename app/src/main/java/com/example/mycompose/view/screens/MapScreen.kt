@@ -4,6 +4,7 @@ import MapViewModel
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -65,6 +66,9 @@ fun MapScreen(navController: NavHostController) {
     var showSuggestions by remember { mutableStateOf(false) }
     var selectedMarkerPosition by remember { mutableStateOf<LatLng?>(null) }
     var isLoading by remember { mutableStateOf(false) } // Loading state
+
+
+
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
@@ -165,6 +169,45 @@ fun MapScreen(navController: NavHostController) {
                     }
                 }
             )
+
+            Spacer(modifier = Modifier.height(8.dp)) // Add spacing between TextField and Button
+
+            Button(
+                onClick = {
+                    // Save the location details
+                    mapViewModel.saveLocation(searchText, selectedMarkerPosition)
+
+                    // Display the location details
+                    val locationString = searchText
+                    val locationLatLng = selectedMarkerPosition
+                    if (locationLatLng != null) {
+                        // Use Toast to display the data
+                        Toast.makeText(
+                            context,
+                            "Location: $locationString\nLat: ${locationLatLng.latitude}, Lng: ${locationLatLng.longitude}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(context, "No location selected", Toast.LENGTH_SHORT).show()
+                    }
+
+                    // Navigate back and pass the data
+                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                        "locationData",
+                        mapViewModel.savedLocation.value
+                    )
+                    navController.popBackStack()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text("Kaydet")
+            }
+
+
+
+
 
 
             // Suggestion popup

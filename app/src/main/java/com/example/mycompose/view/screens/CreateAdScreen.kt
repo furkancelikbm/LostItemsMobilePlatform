@@ -65,6 +65,7 @@ fun CreateAdScreen(
     val selectedCategory = viewModel.selectedCategory.value
     val mostFrequentLabel = predictionViewModel.predictionResult.value
 
+
     // Observe saved category
     val backStackEntry = navController.currentBackStackEntry
     val savedStateHandle = backStackEntry?.savedStateHandle
