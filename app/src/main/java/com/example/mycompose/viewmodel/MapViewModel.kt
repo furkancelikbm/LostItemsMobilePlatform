@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.LocationManager
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,11 @@ class MapViewModel : ViewModel() {
     private val _placeName = mutableStateOf("")
     val placeName: State<String> = _placeName
 
+    private val _placeAdress = mutableStateOf("")
+    val placeAdress: State<String> = _placeAdress
+
+
+
     private val _errorState = mutableStateOf<String?>(null)
     val errorState: State<String?> = _errorState
 
@@ -59,28 +65,40 @@ class MapViewModel : ViewModel() {
     }
 
     // Convert latitude and longitude to place name
-    private fun fetchPlaceName(context: Context, latLng: LatLng) {
+     fun fetchPlaceName(context: Context, latLng: LatLng) {
         viewModelScope.launch {
             val placeName = getPlaceNameFromLatLng(context, latLng)
             _placeName.value = placeName ?: "Unknown Location"
         }
     }
 
-    // Add this public method to your MapViewModel
-    fun getPlaceNameForLatLng(context: Context, latLng: LatLng) {
-        fetchPlaceName(context, latLng) // Calls the private method internally
-    }
 
-    private suspend fun getPlaceNameFromLatLng(context: Context, latLng: LatLng): String? {
+    fun getPlaceNameFromLatLng(context: Context, latLng: LatLng): String? {
         return try {
             val geocoder = Geocoder(context)
             val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            addresses?.firstOrNull()?.getAddressLine(0)
+
+            // Combine different address components (if available) into a full address.
+            val address = addresses?.firstOrNull()
+            address?.let {
+                val fullAddress = StringBuilder()
+
+                // Append all available address components
+                if (it.thoroughfare != null) fullAddress.append(it.thoroughfare).append(", ")
+                if (it.subThoroughfare != null) fullAddress.append(it.subThoroughfare).append(", ")
+                if (it.locality != null) fullAddress.append(it.locality).append(", ")
+                if (it.adminArea != null) fullAddress.append(it.adminArea).append(", ")
+                if (it.countryName != null) fullAddress.append(it.countryName)
+
+                // Return the full address as a string
+                fullAddress.toString().takeIf { it.isNotEmpty() } ?: "Address not available"
+            }
         } catch (e: Exception) {
             _errorState.value = "Error fetching address: ${e.localizedMessage}"
             null
         }
     }
+
 
     // Fetch location suggestions based on the query
     fun fetchLocationSuggestions(query: String, context: Context) {
@@ -120,32 +138,6 @@ class MapViewModel : ViewModel() {
             null
         }
     }
-
-    // Select a suggested location and update the user location with full address
-    fun selectSuggestedLocation(suggestion: SuggestionNew, context: Context) {
-        viewModelScope.launch {
-            try {
-                // Fetch place details using placeId to get LatLng and full address
-                val placesClient = Places.createClient(context)
-                val placeFields = listOf(Place.Field.LAT_LNG, Place.Field.NAME, Place.Field.ADDRESS)
-                val request = FetchPlaceRequest.builder(suggestion.placeId, placeFields).build()
-
-                val response = placesClient.fetchPlace(request).await()
-                val place = response.place
-                place.latLng?.let { latLng ->
-                    // Update user location with fetched LatLng
-                    _userLocation.value = latLng
-                    // Set the full address in placeName
-                    _placeName.value = place.address ?: "Unknown Location"
-                } ?: run {
-                    _errorState.value = "Location not found for placeId: ${suggestion.placeId}"
-                }
-            } catch (e: Exception) {
-                _errorState.value = "Error fetching place details: ${e.localizedMessage}"
-            }
-        }
-    }
-
 
     // Check GPS and fetch location
     fun checkGpsAndFetchLocation(context: Context, fusedLocationClient: FusedLocationProviderClient, onLocationFetched: (String) -> Unit) {

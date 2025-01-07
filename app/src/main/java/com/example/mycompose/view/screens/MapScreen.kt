@@ -186,22 +186,27 @@ fun MapScreen(navController: NavHostController) {
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            searchText = suggestion.fullText
                                             showSuggestions = false
-                                            mapViewModel.selectSuggestedLocation(suggestion, context)
                                             suggestion.latLng?.let { latLng ->
-                                                selectedMarkerPosition = latLng // Ensure latLng is not null
+                                                selectedMarkerPosition = suggestion.latLng // Ensure latLng is not null
                                                 cameraPositionState.move(
                                                     CameraUpdateFactory.newLatLngZoom(latLng, 15f)
                                                 )
                                             }
+                                            // Update the searchText with the fullText of the selected suggestion
+                                            searchText = suggestion.fullText
                                         }
                                         .padding(8.dp)
                                 ) {
-                                    Text(text = suggestion.fullText, modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSurface)
+                                    Text(
+                                        text = suggestion.fullText,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
                                 }
                             }
                         }
+
                     }
                 }
             }
@@ -226,7 +231,7 @@ fun MapScreen(navController: NavHostController) {
                         CameraUpdateFactory.newLatLngZoom(latLng, 15f)
                     )
                     isLoading = true // Set loading to true while fetching the place name
-                    mapViewModel.getPlaceNameForLatLng(context, latLng)
+                    mapViewModel.fetchPlaceName(context, latLng)
                     isLoading = false // Set loading to false after fetching the place name
                     // Update searchText with the fetched place name
                     val placeName = mapViewModel.placeName.value
