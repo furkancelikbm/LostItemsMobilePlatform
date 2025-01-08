@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,6 +83,17 @@ fun CreateAdScreen(
         }
     }
 
+    val searchText = navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.get<String>("searchText") ?: ""
+
+    val location = remember { mutableStateOf(TextFieldValue(searchText)) }
+
+
+    Log.d("merhba","naber ${location}")
+
+
+
     // UI layout
     Box(
         modifier = Modifier
@@ -129,7 +141,7 @@ fun CreateAdScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             LocationInputField(
-                value = viewModel.locationInputFieldViewModel.pickUp,
+                value = location.value?:viewModel.locationInputFieldViewModel.pickUp,
                 onValueChange = { viewModel.locationInputFieldViewModel.onPickUpValueChanged(it) },
                 placeholder = "Pickup Location",
                 locations = viewModel.locationInputFieldViewModel.pickupLocationPlaces.collectAsState().value,

@@ -191,11 +191,10 @@ fun MapScreen(navController: NavHostController) {
                         Toast.makeText(context, "No location selected", Toast.LENGTH_SHORT).show()
                     }
 
-                    // Navigate back and pass the data
                     navController.previousBackStackEntry?.savedStateHandle?.set(
-                        "locationData",
-                        mapViewModel.savedLocation.value
+                        "searchText", searchText
                     )
+
                     navController.popBackStack()
                 },
                 modifier = Modifier
