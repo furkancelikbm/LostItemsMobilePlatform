@@ -89,8 +89,12 @@ fun CreateAdScreen(
 
     val location = remember { mutableStateOf(TextFieldValue(searchText)) }
 
+    Log.d("Merhaba", "Naber ${location.value.text}")
 
-    Log.d("merhba","naber ${location}")
+    if (location.value.text.isNotEmpty()) {
+        viewModel.locationInputFieldViewModel.onPickUpValueChanged(location.value)
+    }
+
 
 
 
@@ -141,8 +145,16 @@ fun CreateAdScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             LocationInputField(
-                value = location.value?:viewModel.locationInputFieldViewModel.pickUp,
-                onValueChange = { viewModel.locationInputFieldViewModel.onPickUpValueChanged(it) },
+                value = viewModel.locationInputFieldViewModel.pickUp,
+                onValueChange = { newValue ->
+                    viewModel.locationInputFieldViewModel.onPickUpValueChanged(newValue)
+                    // Check if value is cleared
+                    if (newValue.text.isEmpty()) {
+                        // Clear location value and set the pickup location to viewModel
+                        viewModel.locationInputFieldViewModel.clearPickUpLocation()
+                        location.value = TextFieldValue("")  // Clear the TextField value
+                    }
+                },
                 placeholder = "Pickup Location",
                 locations = viewModel.locationInputFieldViewModel.pickupLocationPlaces.collectAsState().value,
                 onLocationClick = { place ->
@@ -157,8 +169,15 @@ fun CreateAdScreen(
                 onLocationButtonClick = {
                     Log.d("CreateAdScreen", "Location button clicked")
                     navController.navigate("mapScreen") // Navigate to the MapScreen
+                },
+                onRemoveClick = {
+                    viewModel.locationInputFieldViewModel.clearPickUpLocation() // Clear location in ViewModel
+                    location.value = TextFieldValue("")  // Clear the TextField value
+                    Log.d("CreateAdScreen", "Pickup location cleared")
                 }
             )
+
+
 
 
             Spacer(modifier = Modifier.height(16.dp))

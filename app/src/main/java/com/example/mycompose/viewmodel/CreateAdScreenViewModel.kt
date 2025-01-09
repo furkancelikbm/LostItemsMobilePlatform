@@ -47,12 +47,13 @@ class CreateAdScreenViewModel(
     val locationInputFieldViewModel = LocationInputFieldViewModel()
 
     var selectedCategory = mutableStateOf("")
-    
+
 
 
     init {
         fetchUserProfile()
     }
+
 
     private fun fetchUserProfile() {
         viewModelScope.launch {

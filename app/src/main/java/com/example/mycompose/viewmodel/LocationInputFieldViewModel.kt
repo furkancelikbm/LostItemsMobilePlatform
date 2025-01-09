@@ -60,6 +60,11 @@ class LocationInputFieldViewModel : ViewModel() {
         pickUp = value
     }
 
+    // Method to clear the pickup location
+    fun clearPickUpLocation() {
+        pickUp = TextFieldValue("") // Reset the pickup location to empty
+    }
+
     fun onPlaceClick(value: String) {
         pickUp = TextFieldValue(
             text = value,

@@ -9,6 +9,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -33,61 +34,88 @@ fun LocationInputField(
     locations: List<Place>,
     onLocationClick: (Place) -> Unit,
     checkAndFirstPlace: () -> Unit,
-    onLocationButtonClick: () -> Unit // Lambda function for button click action
+    onLocationButtonClick: () -> Unit, // Lambda function for button click action
+    onRemoveClick: () -> Unit // Lambda function for remove action
 ) {
     var showSuggestions by remember { mutableStateOf(true) }
     val focusRequester = remember { FocusRequester() }
 
     Box(modifier = Modifier.padding(3.dp)) {
-        // Outer Box to position TextField and IconButton
-        Box(modifier = Modifier.fillMaxWidth()) {
-            // TextField for input
-            BasicTextField(
-                value = value,
-                onValueChange = { newValue ->
-                    onValueChange(newValue)
-                    showSuggestions = true // Show suggestions as user types
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, MaterialTheme.colorScheme.outline)
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(start = 16.dp, end = 48.dp, top = 8.dp, bottom = 8.dp) // Reduced padding on the right
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { focusState ->
-                        if (!focusState.isFocused) {
-                            showSuggestions = false // Hide suggestions when not focused
-                            checkAndFirstPlace() // Check and select the first place when focus is lost
-                        }
+        // Outer Box to position TextField, IconButton, and Remove Button
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background)
+                .border(1.dp, MaterialTheme.colorScheme.outline)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // TextField for input
+                BasicTextField(
+                    value = value,
+                    onValueChange = { newValue ->
+                        onValueChange(newValue)
+                        showSuggestions = true // Show suggestions as user types
                     },
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        if (value.text.isEmpty()) {
-                            Text(text = placeholder, color = Color.Gray)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp) // Adjust padding
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { focusState ->
+                            if (!focusState.isFocused) {
+                                showSuggestions = false // Hide suggestions when not focused
+                                checkAndFirstPlace() // Check and select the first place when focus is lost
+                            }
+                        },
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        ) {
+                            if (value.text.isEmpty()) {
+                                Text(text = placeholder, color = Color.Gray)
+                            }
+                            innerTextField()
                         }
-                        innerTextField()
+                    }
+                )
+
+                // Remove Button - Shown only if there's text in the field
+                if (value.text.isNotEmpty()) {
+                    IconButton(
+                        onClick = {
+                            onRemoveClick()
+                            showSuggestions = false // Hide suggestions when cleared
+                        },
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Clear, // Use a suitable "Clear" icon
+                            contentDescription = "Remove Location",
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
-            )
 
-            IconButton(
-                onClick = onLocationButtonClick,
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(0.dp)
-                    .size(40.dp)
-                    .padding(end = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.LocationOn,
-                    contentDescription = "Select Location",
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
+                // Location Button
+                IconButton(
+                    onClick = onLocationButtonClick,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.LocationOn,
+                        contentDescription = "Select Location",
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         }
 
