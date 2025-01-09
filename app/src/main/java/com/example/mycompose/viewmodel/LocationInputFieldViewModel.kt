@@ -30,6 +30,7 @@ class LocationInputFieldViewModel : ViewModel() {
 
     var selectedLatitude by mutableStateOf<Double?>(null)
         private set
+
     var selectedLongitude by mutableStateOf<Double?>(null)
         private set
 
@@ -96,5 +97,14 @@ class LocationInputFieldViewModel : ViewModel() {
         } else {
             unSelectedLocationId = "0"
         }
+    }
+
+    fun updateLocationData (longitude : Double , latitude : Double){
+        selectedLatitude=latitude
+        selectedLongitude=longitude
+        Log.d("view", "longi ve lati ${longitude} ve ltd ${latitude}")
+        Log.d("view", "slongi ve slati ${selectedLongitude} ve ltd ${selectedLatitude}")
+
+
     }
 }

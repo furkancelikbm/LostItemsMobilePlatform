@@ -191,10 +191,13 @@ fun MapScreen(navController: NavHostController) {
                         Toast.makeText(context, "No location selected", Toast.LENGTH_SHORT).show()
                     }
 
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        "searchText", searchText
-                    )
-
+                    selectedMarkerPosition?.let { position ->
+                        navController.previousBackStackEntry?.savedStateHandle?.set("searchText", searchText)
+                        navController.previousBackStackEntry?.savedStateHandle?.set("latitude", position.latitude)
+                        navController.previousBackStackEntry?.savedStateHandle?.set("longitude", position.longitude)
+                    } ?: run {
+                        Toast.makeText(context, "No location selected", Toast.LENGTH_SHORT).show()
+                    }
                     navController.popBackStack()
                 },
                 modifier = Modifier

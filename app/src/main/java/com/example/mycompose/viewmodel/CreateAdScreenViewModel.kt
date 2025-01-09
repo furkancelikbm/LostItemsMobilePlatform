@@ -38,8 +38,9 @@ class CreateAdScreenViewModel(
     var isLoading = mutableStateOf(false)
         private set
 
-    var locationId = mutableStateOf("")
+    var locationValidation = mutableStateOf("")
         private set
+
 
     var successMessage by mutableStateOf("")
         private set
@@ -93,7 +94,7 @@ class CreateAdScreenViewModel(
                 errorMessage.value = "You must add at least one photo."
                 showError.value = true
             }
-            locationId.value.isEmpty() || locationId.value == "0" -> {
+            locationValidation.value.isEmpty() || locationValidation.value == "0" -> {
                 errorMessage.value = "Please select a valid location."
                 showError.value = true
             }
@@ -110,7 +111,7 @@ class CreateAdScreenViewModel(
                             userId = profile.userId,
                             imageUrls = imageUrls,
                             location = locationInputFieldViewModel.pickUp.text,
-                            locationId = locationId.value,
+                            locationId = locationValidation.value,
                             category = selectedCategory.value,
                             longitude = locationInputFieldViewModel.selectedLongitude,
                             latitude = locationInputFieldViewModel.selectedLatitude
@@ -134,7 +135,7 @@ class CreateAdScreenViewModel(
 
     private fun resetFields() {
         adModel.value = AdModel("", "", "", "", listOf(), "", "", System.currentTimeMillis())
-        locationId.value = ""
+        locationValidation.value = ""
         locationInputFieldViewModel.onPickUpValueChanged(TextFieldValue(""))
         selectedImages.clear()
     }

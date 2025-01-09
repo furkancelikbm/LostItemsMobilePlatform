@@ -43,7 +43,6 @@ import com.example.mycompose.util.getBitmapFromUri
 import com.example.mycompose.view.components.TransparentCircularProgressBar
 import com.example.mycompose.viewmodel.CreateAdScreenViewModel
 import com.example.mycompose.viewmodel.AdPredictionViewModel
-import dagger.hilt.android.lifecycle.HiltViewModel
 
 @Composable
 fun CreateAdScreen(
@@ -89,11 +88,37 @@ fun CreateAdScreen(
 
     val location = remember { mutableStateOf(TextFieldValue(searchText)) }
 
-    Log.d("Merhaba", "Naber ${location.value.text}")
-
     if (location.value.text.isNotEmpty()) {
         viewModel.locationInputFieldViewModel.onPickUpValueChanged(location.value)
     }
+
+    val latitude =  navController.currentBackStackEntry?.savedStateHandle?.get<Double>("latitude")
+    val longitude = navController.currentBackStackEntry?.savedStateHandle?.get<Double>("longitude")
+
+
+    Log.d("Merhaba", "view latlng ${viewModel.locationInputFieldViewModel.selectedLongitude} ve ltd ${viewModel.locationInputFieldViewModel.selectedLatitude}")
+    Log.d("Merhaba", "longi ve lati ${longitude} ve ltd ${latitude}")
+
+    // Veriler geldiğinde, boş değilse atama yap
+    if (latitude != null && longitude != null) {
+        // Location input değeri boş değilse, onPickUpValueChanged çağrısı yapılır
+        if (location.value.text.isNotEmpty()) {
+            viewModel.locationInputFieldViewModel.onPickUpValueChanged(location.value)
+        }
+        // Koşullu atama
+//        viewModel.locationInputFieldViewModel.selectedLatitude = latitude
+//        viewModel.locationInputFieldViewModel.selectedLongitude = longitude
+        viewModel.locationValidation.value=location.value.text
+
+        viewModel.locationInputFieldViewModel.updateLocationData(longitude,latitude)
+
+    } else {
+        Log.d("Merhaba", "Latitude veya Longitude verisi gelmedi")
+    }
+
+    Log.d("Merhaba", "view latlng ${viewModel.locationInputFieldViewModel.selectedLongitude} ve ltd ${viewModel.locationInputFieldViewModel.selectedLatitude}")
+    Log.d("Merhaba", "longi ve lati ${longitude} ve ltd ${latitude}")
+
 
 
 
@@ -159,12 +184,12 @@ fun CreateAdScreen(
                 locations = viewModel.locationInputFieldViewModel.pickupLocationPlaces.collectAsState().value,
                 onLocationClick = { place ->
                     viewModel.locationInputFieldViewModel.onPlaceClick(place.name)
-                    viewModel.locationId.value = place.id
+                    viewModel.locationValidation.value = place.id
                     Log.d("CreateAdScreen", "Selected Place ID: ${place.id}")
                 },
                 checkAndFirstPlace = {
                     viewModel.locationInputFieldViewModel.checkAndSelectFirstPlace()
-                    viewModel.locationId.value = viewModel.locationInputFieldViewModel.unSelectedLocationId
+                    viewModel.locationValidation.value = viewModel.locationInputFieldViewModel.unSelectedLocationId
                 },
                 onLocationButtonClick = {
                     Log.d("CreateAdScreen", "Location button clicked")
