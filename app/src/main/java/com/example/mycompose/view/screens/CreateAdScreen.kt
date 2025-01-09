@@ -46,10 +46,9 @@ import com.example.mycompose.viewmodel.AdPredictionViewModel
 
 @Composable
 fun CreateAdScreen(
-    navController: NavHostController) {
-
+    navController: NavHostController
+) {
     val viewModel: CreateAdScreenViewModel = viewModel()
-
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
@@ -64,7 +63,6 @@ fun CreateAdScreen(
     // Selected category and most frequent prediction label
     val selectedCategory = viewModel.selectedCategory.value
     val mostFrequentLabel = predictionViewModel.predictionResult.value
-
 
     // Observe saved category
     val backStackEntry = navController.currentBackStackEntry
@@ -82,35 +80,23 @@ fun CreateAdScreen(
         }
     }
 
-    val searchText = navController.currentBackStackEntry
-        ?.savedStateHandle
-        ?.get<String>("searchText") ?: ""
-
+    val searchText = navController.currentBackStackEntry?.savedStateHandle?.get<String>("searchText") ?: ""
     val location = remember { mutableStateOf(TextFieldValue(searchText)) }
 
     if (location.value.text.isNotEmpty()) {
         viewModel.locationInputFieldViewModel.onPickUpValueChanged(location.value)
     }
 
-    val latitude =  navController.currentBackStackEntry?.savedStateHandle?.get<Double>("latitude")
+    val latitude = navController.currentBackStackEntry?.savedStateHandle?.get<Double>("latitude")
     val longitude = navController.currentBackStackEntry?.savedStateHandle?.get<Double>("longitude")
-
 
     // Veriler geldiğinde, boş değilse atama yap
     if (latitude != null && longitude != null) {
-//        // Location input değeri boş değilse, onPickUpValueChanged çağrısı yapılır
-//        if (location.value.text.isNotEmpty()) {
-//            viewModel.locationInputFieldViewModel.onPickUpValueChanged(location.value)
-//        }
-
-        viewModel.locationValidation.value=location.value.text
-
-        viewModel.locationInputFieldViewModel.updateLocationData(longitude,latitude,location.value)
-
+        viewModel.locationValidation.value = location.value.text
+        viewModel.locationInputFieldViewModel.updateLocationData(longitude, latitude, location.value)
     } else {
         Log.d("Merhaba", "Latitude veya Longitude verisi gelmedi")
     }
-
 
     // UI layout
     Box(
@@ -190,9 +176,6 @@ fun CreateAdScreen(
                     Log.d("CreateAdScreen", "Pickup location cleared")
                 }
             )
-
-
-
 
             Spacer(modifier = Modifier.height(16.dp))
 
