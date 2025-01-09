@@ -99,7 +99,7 @@ class LocationInputFieldViewModel : ViewModel() {
         }
     }
 
-    fun updateLocationData (longitude : Double , latitude : Double){
+    fun updateLocationData (longitude : Double , latitude : Double,pickup:TextFieldValue){
         selectedLatitude=latitude
         selectedLongitude=longitude
         Log.d("view", "longi ve lati ${longitude} ve ltd ${latitude}")

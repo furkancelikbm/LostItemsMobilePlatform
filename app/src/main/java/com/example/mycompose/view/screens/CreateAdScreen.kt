@@ -96,31 +96,20 @@ fun CreateAdScreen(
     val longitude = navController.currentBackStackEntry?.savedStateHandle?.get<Double>("longitude")
 
 
-    Log.d("Merhaba", "view latlng ${viewModel.locationInputFieldViewModel.selectedLongitude} ve ltd ${viewModel.locationInputFieldViewModel.selectedLatitude}")
-    Log.d("Merhaba", "longi ve lati ${longitude} ve ltd ${latitude}")
-
     // Veriler geldiğinde, boş değilse atama yap
     if (latitude != null && longitude != null) {
-        // Location input değeri boş değilse, onPickUpValueChanged çağrısı yapılır
-        if (location.value.text.isNotEmpty()) {
-            viewModel.locationInputFieldViewModel.onPickUpValueChanged(location.value)
-        }
-        // Koşullu atama
-//        viewModel.locationInputFieldViewModel.selectedLatitude = latitude
-//        viewModel.locationInputFieldViewModel.selectedLongitude = longitude
+//        // Location input değeri boş değilse, onPickUpValueChanged çağrısı yapılır
+//        if (location.value.text.isNotEmpty()) {
+//            viewModel.locationInputFieldViewModel.onPickUpValueChanged(location.value)
+//        }
+
         viewModel.locationValidation.value=location.value.text
 
-        viewModel.locationInputFieldViewModel.updateLocationData(longitude,latitude)
+        viewModel.locationInputFieldViewModel.updateLocationData(longitude,latitude,location.value)
 
     } else {
         Log.d("Merhaba", "Latitude veya Longitude verisi gelmedi")
     }
-
-    Log.d("Merhaba", "view latlng ${viewModel.locationInputFieldViewModel.selectedLongitude} ve ltd ${viewModel.locationInputFieldViewModel.selectedLatitude}")
-    Log.d("Merhaba", "longi ve lati ${longitude} ve ltd ${latitude}")
-
-
-
 
 
     // UI layout
