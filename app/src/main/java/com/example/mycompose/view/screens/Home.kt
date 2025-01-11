@@ -37,7 +37,8 @@ fun Home(navController: NavController) {
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf("") }
-    var maxDistance by remember { mutableStateOf(25.0) } // Adjustable distance state
+    var maxDistance by remember { mutableStateOf(25.0) }
+    var isFilterVisible by remember { mutableStateOf(false) } // State to toggle filter visibility
 
     val context = LocalContext.current
 
@@ -69,14 +70,12 @@ fun Home(navController: NavController) {
                             latitude, longitude,
                             viewModel.selectedLatitude.value!!, viewModel.selectedLongitude.value!!
                         )
-                        distance <= maxDistance // Adjustable distance filter
+                        distance <= maxDistance
                     } else {
                         false
                     }
                 })
     }
-
-    Log.d("HomeScreen", "Selected location latitude and longitude: ${viewModel.selectedLatitude.value}, ${viewModel.selectedLongitude.value}")
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Search Bar Row
@@ -94,7 +93,7 @@ fun Home(navController: NavController) {
                     .weight(1f)
                     .padding(end = 8.dp),
                 trailingIcon = {
-                    IconButton(onClick = { /* Handle Filter Icon Click */ }) {
+                    IconButton(onClick = { isFilterVisible = !isFilterVisible }) { // Toggle filter visibility
                         Icon(
                             imageVector = Icons.Default.FilterList,
                             contentDescription = "Filter"
@@ -104,74 +103,76 @@ fun Home(navController: NavController) {
             )
         }
 
-        // Filter Options Row (Location, Date)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box {
+        // Conditionally display the filter box
+        if (isFilterVisible) {
+            Column(modifier = Modifier.padding(8.dp)) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clickable {
-                            navController.navigate("LocationSelectionScreen")
-                        }
-                        .padding(8.dp)
-                        .background(MaterialTheme.colorScheme.surface)
-                        .clip(RoundedCornerShape(8.dp))
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Box {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clickable {
+                                    navController.navigate("LocationSelectionScreen")
+                                }
+                                .padding(8.dp)
+                                .background(MaterialTheme.colorScheme.surface)
+                                .clip(RoundedCornerShape(8.dp))
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = "${viewModel.selectedState.value}, ${viewModel.selectedLocation.value}"
+                            )
+                        }
+                    }
+
+                    // Date Picker
+                    val calendar = Calendar.getInstance()
+                    val datePickerDialog = DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            selectedDate = String.format("%02d/%02d/%02d", dayOfMonth, month + 1, year % 100)
+                        },
+                        calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)
+                    )
+
                     Text(
-                        text = "${viewModel.selectedState.value}, ${viewModel.selectedLocation.value}"
+                        text = if (selectedDate.isEmpty()) "Select Date" else selectedDate,
+                        modifier = Modifier
+                            .clickable { datePickerDialog.show() }
+                            .padding(8.dp)
+                            .background(MaterialTheme.colorScheme.surface)
+                            .clip(RoundedCornerShape(8.dp))
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
-            }
 
-            // Date Picker
-            val calendar = Calendar.getInstance()
-            val datePickerDialog = DatePickerDialog(
-                context,
-                { _, year, month, dayOfMonth ->
-                    selectedDate = String.format("%02d/%02d/%02d", dayOfMonth, month + 1, year % 100)
-                    Log.d("HomeScreen", "Selected date: $selectedDate")
-                },
-                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)
-            )
-
-            Text(
-                text = if (selectedDate.isEmpty()) "Select Date" else selectedDate,
-                modifier = Modifier
-                    .clickable { datePickerDialog.show() }
-                    .padding(8.dp)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .clip(RoundedCornerShape(8.dp))
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-        }
-
-        // Conditionally Display Slider for Distance
-        if (viewModel.selectedLocation.value != "All Locations") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Distance: ${maxDistance.toInt()} km")
-                Spacer(modifier = Modifier.width(8.dp))
-                Slider(
-                    value = maxDistance.toFloat(),
-                    onValueChange = { maxDistance = it.toDouble() },
-                    valueRange = 1f..100f, // Range from 1 km to 100 km
-                    modifier = Modifier.weight(1f)
-                )
+                if (viewModel.selectedLocation.value != "All Locations") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "Distance: ${maxDistance.toInt()} km")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Slider(
+                            value = maxDistance.toFloat(),
+                            onValueChange = { maxDistance = it.toDouble() },
+                            valueRange = 1f..100f,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
         }
 
-        // SwipeRefresh with LazyVerticalGrid for displaying photos
+        // SwipeRefresh with LazyVerticalGrid
         SwipeRefresh(
             state = rememberSwipeRefreshState(isRefreshing.value),
             onRefresh = { viewModel.refreshPhotos() }
