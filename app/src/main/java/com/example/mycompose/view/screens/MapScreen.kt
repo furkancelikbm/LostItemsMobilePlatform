@@ -295,6 +295,7 @@ fun MapScreen(navController: NavHostController) {
                 // Show the user's current location marker if no marker is selected
                 if (selectedMarkerPosition == null) {
                     mapViewModel.userLocation.value?.let { position ->
+                        selectedMarkerPosition=position
                         Marker(
                             state = MarkerState(position = position),
                             title = "Your Location",
