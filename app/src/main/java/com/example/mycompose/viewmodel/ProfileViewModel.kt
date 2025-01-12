@@ -6,18 +6,34 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mycompose.model.AdModel
 import com.example.mycompose.model.UserProfile
+import com.example.mycompose.repository.AdRepository
 import com.example.mycompose.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 @HiltViewModel
-class ProfileViewModel @Inject constructor(private val repository: ProfileRepository) : ViewModel() {
+class ProfileViewModel @Inject constructor(private val repository: ProfileRepository , private  val adRepository: AdRepository) : ViewModel() {
     var loading by mutableStateOf(false)
     var userProfile = mutableStateOf(UserProfile())
     var newPicUri = mutableStateOf<Uri?>(null)
     var errorMessage = mutableStateOf("")
     var successMessage by mutableStateOf("") // Add this line
+    // In ProfileViewModel
+    var userAds = mutableStateOf<List<AdModel>>(emptyList())
+
+    // Add this to load user ads (you can call this from the `loadUserProfile` function)
+    fun loadUserAds() {
+        viewModelScope.launch {
+            try {
+                userAds.value = adRepository.getUserAds() // Fetch ads from repository
+            } catch (e: Exception) {
+                errorMessage.value = "Error loading ads"
+            }
+        }
+    }
+
 
 
     fun loadUserProfile() {
@@ -29,6 +45,7 @@ class ProfileViewModel @Inject constructor(private val repository: ProfileReposi
             }
         }
     }
+
 
     fun saveProfileData(onSuccess: () -> Unit) {
         viewModelScope.launch {
