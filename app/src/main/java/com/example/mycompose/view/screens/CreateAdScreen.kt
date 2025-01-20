@@ -122,17 +122,27 @@ fun CreateAdScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Title with character limit of 50
             AdTextField(
                 value = viewModel.adModel.value.title,
-                onValueChange = { viewModel.adModel.value = viewModel.adModel.value.copy(title = it) },
+                onValueChange = {
+                    if (it.length <= 50) { // Limit to 50 characters
+                        viewModel.adModel.value = viewModel.adModel.value.copy(title = it)
+                    }
+                },
                 label = "Title"
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Description with character limit of 200
             AdTextField(
                 value = viewModel.adModel.value.description,
-                onValueChange = { viewModel.adModel.value = viewModel.adModel.value.copy(description = it) },
+                onValueChange = {
+                    if (it.length <= 200) { // Limit to 200 characters
+                        viewModel.adModel.value = viewModel.adModel.value.copy(description = it)
+                    }
+                },
                 label = "Description"
             )
 
