@@ -31,8 +31,9 @@ fun BottomNavigationBar(navController: NavController, viewModel: NavigationViewM
     val items = listOf(
         NavItem("Home", Icons.Filled.Home, Icons.Outlined.Home),
         NavItem("CreateAdScreen", Icons.Filled.Add, Icons.Outlined.Add),
-        NavItem("MessageBoxScreen",Icons.Filled.Message,Icons.Outlined.Message),
-        NavItem("Profile", Icons.Filled.Person, Icons.Outlined.Person),)
+        NavItem("MessageBoxScreen", Icons.Filled.Message, Icons.Outlined.Message),
+        NavItem("Profile", Icons.Filled.Person, Icons.Outlined.Person),
+    )
 
     // Get the current route
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -50,17 +51,16 @@ fun BottomNavigationBar(navController: NavController, viewModel: NavigationViewM
                         contentDescription = item.title
                     )
                 },
-                label = { Text(text = item.title) },
                 selected = currentRoute == item.title,
                 onClick = {
                     //Handle Home double-click
-                    if (item.title=="Home"){
-                        val currentTime=System.currentTimeMillis()
-                        if(currentTime-lastHomeClickTime.value<500){
+                    if (item.title == "Home") {
+                        val currentTime = System.currentTimeMillis()
+                        if (currentTime - lastHomeClickTime.value < 500) {
                             //Detected a double-click, refresh Home screen
                             viewModel.onHomeDoubleClick(navController)
                         }
-                        lastHomeClickTime.value=currentTime
+                        lastHomeClickTime.value = currentTime
                     }
 
                     //Navigate to the selected item
@@ -78,6 +78,7 @@ fun BottomNavigationBar(navController: NavController, viewModel: NavigationViewM
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

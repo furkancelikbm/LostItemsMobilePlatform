@@ -19,7 +19,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 @Composable
 fun TransparentCircularProgressBar(isLoading: Boolean) {
     if (!isLoading) return
-
     Box(
         modifier = Modifier
             .fillMaxSize()
