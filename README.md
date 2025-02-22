@@ -20,3 +20,11 @@ This study focuses on developing an AI-powered mobile application to facilitate 
 
 ![AdDetailScreen](https://github.com/user-attachments/assets/e960a649-e294-40b7-b7d8-1b4b81f865d1)
 
+![RangeSettings](https://github.com/user-attachments/assets/d51d5a30-ce58-4483-a9a9-2544e4083cdd)
+
+![States](https://github.com/user-attachments/assets/9f0834a8-0a15-45a1-8d41-982090e2edd4)
+
+![Cities](https://github.com/user-attachments/assets/e6c5190f-74e1-459c-a160-ec4f2f2536e4)
+
+![filterInHome](https://github.com/user-attachments/assets/a1f024b1-99a3-423e-bd9f-e06956ff0c0c)
+
