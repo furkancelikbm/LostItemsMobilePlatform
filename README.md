@@ -1,4 +1,4 @@
-its an app for find the lost items. we can say Lost and Found mobile app 
+This study focuses on developing an AI-powered mobile application to facilitate lost item reporting and recovery processes. The application utilizes a TensorFlow Lite-based object recognition model to automatically categorize items and manages user data through Firebase. Users can create listings for lost items and communicate directly with finders. Developed with Kotlin and Android Studio, the app integrates the SSD MobileNet V2 model, which classifies 224x224 images with an accuracy exceeding 55%.
 
 ![HomeScreen](https://github.com/user-attachments/assets/e285ff93-d989-41b2-9868-a8e8ed83b1b5)
 
