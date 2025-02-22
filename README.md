@@ -16,3 +16,5 @@ This study focuses on developing an AI-powered mobile application to facilitate 
 
 ![mapScreen](https://github.com/user-attachments/assets/29d92d94-0693-43a5-8af9-6e7e86e976ea)
 
+![ProfileScreen](https://github.com/user-attachments/assets/1cf5f21f-c16c-4ab5-9e61-c1d8591d28a1)
+
